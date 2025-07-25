@@ -1,15 +1,26 @@
-# Nutrient Budget Calculator - Pilot Program
+# High-Resolution Nutrient Budget System
 
-A simplified MVP for nutrient budgeting across 10 pilot dairy farms. This tool helps farm advisors calculate nitrogen and phosphorus balances and check NVZ compliance.
+Advanced prototype for high-resolution nutrient budgeting that tracks N, P, K, and S through Key Operational Units (KOUs) on dairy farms.
 
 ## Features
 
-- **Simple 3-step workflow**: Select farm → Enter data → View report
-- **Nutrient balance calculations** for N and P
-- **NVZ compliance checking** with visual indicators
-- **Print-ready reports** for advisor meetings
-- **Local data storage** (no backend required)
-- **JSON export** for data backup
+### 🎯 Key Operational Units (KOUs)
+- **Individual field tracking** - Each field monitored separately
+- **Livestock groups** - High/mid/low yielders, dry cows
+- **Feed stores** - Silage clamps, concentrate stores
+- **Manure management** - Slurry lagoons, FYM heaps
+
+### 📊 Visualizations
+- **System Overview** - All KOUs with nutrient balances
+- **Nutrient Pathways** - Sankey diagram showing flows
+- **Farm Map** - Color-coded fields by nutrient status
+- **Scenario Planning** - What-if analysis tool
+
+### 🧪 Advanced Features
+- **4 nutrients tracked**: N, P, K, S (not just N & P)
+- **Pathway tracking**: Feed → Livestock → Manure → Fields
+- **Loss pathways**: Atmospheric, leaching, runoff
+- **Financial analysis**: ROI calculations for interventions
 
 ## Quick Start
 
@@ -22,23 +33,33 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ## Usage
 
-1. **Select a farm** from the 10 pilot farms
-2. **Update input values** (pre-populated with defaults)
-3. **View results** including efficiency metrics and compliance status
-4. **Print report** for farm records
+1. **System Overview** - See all KOUs and click for details
+2. **Nutrient Pathways** - Visualize flows between units
+3. **Field Map** - Check field-level nutrient status
+4. **Scenarios** - Test management interventions
+
+## Scenario Planning Examples
+
+- Export slurry to reduce organic N loading
+- Install trailing shoe applicator (-30% NH₃ losses)
+- Implement cover crops (-40% N leaching)
+- Precision feeding (-20% N excretion)
 
 ## Tech Stack
 
-- React 18
-- Vite
+- React 18 with Vite
 - Tailwind CSS
 - Recharts for visualizations
-- Lucide React for icons
+- Lucide React icons
+
+## Data Model
+
+Uses KOU-based structure where each operational unit tracks:
+- Nutrient content (N, P, K, S)
+- Physical properties (area, capacity)
+- Input/output pathways
+- Historical data
 
 ## Deployment
 
-This project is configured for easy deployment to Vercel.
-
-## Data Storage
-
-All data is stored locally in the browser's localStorage. Use the "Export Data" button to download a JSON backup.
+Ready for Vercel deployment. No backend required - uses localStorage.
