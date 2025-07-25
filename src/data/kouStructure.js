@@ -93,7 +93,7 @@ export const createKOU = (type, id, name, properties = {}) => ({
 
 // Template for a nutrient pathway
 export const createPathway = (fromKOU, toKOU, pathwayType, nutrients = {}) => ({
-  id: `${fromKOU}-${toKOU}-${Date.now()}`,
+  id: crypto.randomUUID ? crypto.randomUUID() : `${fromKOU}-${toKOU}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   from: fromKOU,
   to: toKOU,
   type: pathwayType,

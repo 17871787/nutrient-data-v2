@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MapPin, Info, AlertTriangle, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { NUTRIENT_LIMITS, getNutrientStatus, getStatusColor } from '../config/nutrientLimits';
 
 const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
   const [selectedField, setSelectedField] = useState(null);
@@ -22,44 +23,9 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
       const balance = inputs - outputs;
       const balancePerHa = field.properties.area ? balance / field.properties.area : 0;
       
-      // Determine status based on balance
-      let status = 'optimal';
-      let statusColor = '#10b981'; // green
-      
-      if (selectedNutrient === 'N') {
-        if (balancePerHa > 170) {
-          status = 'excess';
-          statusColor = '#ef4444'; // red
-        } else if (balancePerHa > 100) {
-          status = 'high';
-          statusColor = '#f59e0b'; // amber
-        } else if (balancePerHa < 50) {
-          status = 'low';
-          statusColor = '#3b82f6'; // blue
-        }
-      } else if (selectedNutrient === 'P') {
-        if (balancePerHa > 20) {
-          status = 'excess';
-          statusColor = '#ef4444';
-        } else if (balancePerHa > 10) {
-          status = 'high';
-          statusColor = '#f59e0b';
-        } else if (balancePerHa < 5) {
-          status = 'low';
-          statusColor = '#3b82f6';
-        }
-      } else if (selectedNutrient === 'K') {
-        if (balancePerHa > 60) {
-          status = 'excess';
-          statusColor = '#ef4444';
-        } else if (balancePerHa > 40) {
-          status = 'high';
-          statusColor = '#f59e0b';
-        } else if (balancePerHa < 20) {
-          status = 'low';
-          statusColor = '#3b82f6';
-        }
-      }
+      // Determine status based on balance using config
+      const status = getNutrientStatus(selectedNutrient, balancePerHa);
+      const statusColor = getStatusColor(status);
       
       // Get soil index from field properties (simplified)
       const soilIndex = field.properties.nutrients?.[selectedNutrient]?.index || 2;
@@ -134,20 +100,32 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
     <div className="bg-white rounded-lg shadow p-4">
       <h4 className="font-medium text-gray-800 mb-3">Nutrient Status</h4>
       <div className="space-y-2">
+        {selectedNutrient === 'N' && (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('non-compliant') }} />
+            <span className="text-sm text-gray-600">Non-compliant (Above NVZ limit)</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }} />
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('excess') }} />
           <span className="text-sm text-gray-600">Excess (Above recommended)</span>
         </div>
+        {selectedNutrient === 'N' && (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('warning') }} />
+            <span className="text-sm text-gray-600">Warning (Approaching limit)</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }} />
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('high') }} />
           <span className="text-sm text-gray-600">High (Near upper limit)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }} />
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('optimal') }} />
           <span className="text-sm text-gray-600">Optimal (Within target range)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }} />
+          <div className="w-4 h-4 rounded" style={{ backgroundColor: getStatusColor('low') }} />
           <span className="text-sm text-gray-600">Low (Below target)</span>
         </div>
       </div>
@@ -156,26 +134,35 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
       <div className="text-xs text-gray-600 space-y-1">
         {selectedNutrient === 'N' && (
           <>
-            <div>Excess: &gt;170 kg/ha (NVZ limit)</div>
-            <div>High: 100-170 kg/ha</div>
-            <div>Optimal: 50-100 kg/ha</div>
-            <div>Low: &lt;50 kg/ha</div>
+            <div>Non-compliant: &gt;{NUTRIENT_LIMITS.N.nvzLimit} kg/ha (NVZ limit)</div>
+            <div>Warning: {NUTRIENT_LIMITS.N.warningThreshold}-{NUTRIENT_LIMITS.N.nvzLimit} kg/ha</div>
+            <div>High: {NUTRIENT_LIMITS.N.highThreshold}-{NUTRIENT_LIMITS.N.warningThreshold} kg/ha</div>
+            <div>Optimal: {NUTRIENT_LIMITS.N.optimalMin}-{NUTRIENT_LIMITS.N.optimalMax} kg/ha</div>
+            <div>Low: &lt;{NUTRIENT_LIMITS.N.optimalMin} kg/ha</div>
           </>
         )}
         {selectedNutrient === 'P' && (
           <>
-            <div>Excess: &gt;20 kg/ha</div>
-            <div>High: 10-20 kg/ha</div>
-            <div>Optimal: 5-10 kg/ha</div>
-            <div>Low: &lt;5 kg/ha</div>
+            <div>Excess: &gt;{NUTRIENT_LIMITS.P.excessThreshold} kg/ha</div>
+            <div>High: {NUTRIENT_LIMITS.P.highThreshold}-{NUTRIENT_LIMITS.P.excessThreshold} kg/ha</div>
+            <div>Optimal: {NUTRIENT_LIMITS.P.optimalMin}-{NUTRIENT_LIMITS.P.optimalMax} kg/ha</div>
+            <div>Low: &lt;{NUTRIENT_LIMITS.P.optimalMin} kg/ha</div>
           </>
         )}
         {selectedNutrient === 'K' && (
           <>
-            <div>Excess: &gt;60 kg/ha</div>
-            <div>High: 40-60 kg/ha</div>
-            <div>Optimal: 20-40 kg/ha</div>
-            <div>Low: &lt;20 kg/ha</div>
+            <div>Excess: &gt;{NUTRIENT_LIMITS.K.excessThreshold} kg/ha</div>
+            <div>High: {NUTRIENT_LIMITS.K.highThreshold}-{NUTRIENT_LIMITS.K.excessThreshold} kg/ha</div>
+            <div>Optimal: {NUTRIENT_LIMITS.K.optimalMin}-{NUTRIENT_LIMITS.K.optimalMax} kg/ha</div>
+            <div>Low: &lt;{NUTRIENT_LIMITS.K.optimalMin} kg/ha</div>
+          </>
+        )}
+        {selectedNutrient === 'S' && (
+          <>
+            <div>Excess: &gt;{NUTRIENT_LIMITS.S.excessThreshold} kg/ha</div>
+            <div>High: {NUTRIENT_LIMITS.S.highThreshold}-{NUTRIENT_LIMITS.S.excessThreshold} kg/ha</div>
+            <div>Optimal: {NUTRIENT_LIMITS.S.optimalMin}-{NUTRIENT_LIMITS.S.optimalMax} kg/ha</div>
+            <div>Low: &lt;{NUTRIENT_LIMITS.S.optimalMin} kg/ha</div>
           </>
         )}
       </div>

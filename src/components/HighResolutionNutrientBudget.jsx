@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MapPin, Package, Beaker, TreePine, Milk, AlertTriangle, CheckCircle, Info, Plus, ArrowRight, Settings, Database } from 'lucide-react';
 import { 
@@ -17,6 +17,7 @@ import ScenarioPlanning from './ScenarioPlanning';
 import DataManagement from './DataManagement';
 
 const HighResolutionNutrientBudget = () => {
+  const SCHEMA_VERSION = 1; // Add schema version constant
   const [selectedFarmId, setSelectedFarmId] = useState('FARM-001');
   const [activeView, setActiveView] = useState('overview');
   const [selectedKOU, setSelectedKOU] = useState(null);
@@ -32,13 +33,30 @@ const HighResolutionNutrientBudget = () => {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        if (parsed.kous && parsed.pathways) {
+        // Check schema version
+        if (parsed.schemaVersion === SCHEMA_VERSION && parsed.kous && parsed.pathways) {
           setKous(parsed.kous);
           setPathways(parsed.pathways);
+          return;
+        } else if (parsed.kous && parsed.pathways) {
+          // Old format without version - migrate it
+          console.log('Migrating old data format to version', SCHEMA_VERSION);
+          setKous(parsed.kous);
+          setPathways(parsed.pathways);
+          // Save with new format immediately
+          const dataToSave = { 
+            kous: parsed.kous, 
+            pathways: parsed.pathways, 
+            schemaVersion: SCHEMA_VERSION,
+            timestamp: new Date().toISOString() 
+          };
+          localStorage.setItem('nutrientBudgetAdvanced', JSON.stringify(dataToSave));
           return;
         }
       } catch (e) {
         console.error('Error loading saved data:', e);
+        // Clear corrupted data
+        localStorage.removeItem('nutrientBudgetAdvanced');
       }
     }
     
@@ -102,7 +120,12 @@ const HighResolutionNutrientBudget = () => {
   // Save to localStorage whenever kous or pathways change
   useEffect(() => {
     if (Object.keys(kous).length > 0 || pathways.length > 0) {
-      const dataToSave = { kous, pathways, timestamp: new Date().toISOString() };
+      const dataToSave = { 
+        kous, 
+        pathways, 
+        schemaVersion: SCHEMA_VERSION,
+        timestamp: new Date().toISOString() 
+      };
       localStorage.setItem('nutrientBudgetAdvanced', JSON.stringify(dataToSave));
     }
   }, [kous, pathways]);
@@ -135,11 +158,14 @@ const HighResolutionNutrientBudget = () => {
 
   // Overview View - Shows all KOUs
   const OverviewView = () => {
-    const kousByType = Object.values(kous).reduce((acc, kou) => {
-      if (!acc[kou.type]) acc[kou.type] = [];
-      acc[kou.type].push(kou);
-      return acc;
-    }, {});
+    const kousByType = useMemo(() => 
+      Object.values(kous).reduce((acc, kou) => {
+        if (!acc[kou.type]) acc[kou.type] = [];
+        acc[kou.type].push(kou);
+        return acc;
+      }, {}),
+      [kous]
+    );
 
     return (
       <div className="space-y-6">
@@ -312,9 +338,18 @@ const HighResolutionNutrientBudget = () => {
   const KOUDetailView = () => {
     if (!selectedKOU) return null;
 
-    const balance = calculateKOUBalance(selectedKOU, pathways);
-    const incomingPathways = pathways.filter(p => p.to === selectedKOU.id);
-    const outgoingPathways = pathways.filter(p => p.from === selectedKOU.id);
+    const balance = useMemo(
+      () => calculateKOUBalance(selectedKOU, pathways),
+      [selectedKOU.id, pathways]
+    );
+    const incomingPathways = useMemo(
+      () => pathways.filter(p => p.to === selectedKOU.id),
+      [pathways, selectedKOU.id]
+    );
+    const outgoingPathways = useMemo(
+      () => pathways.filter(p => p.from === selectedKOU.id),
+      [pathways, selectedKOU.id]
+    );
 
     return (
       <div className="space-y-6">
