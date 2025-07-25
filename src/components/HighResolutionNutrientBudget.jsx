@@ -16,6 +16,7 @@ const NutrientPathwaysView = React.lazy(() => import('./NutrientPathwaysView'));
 const FarmNutrientMap = React.lazy(() => import('./FarmNutrientMap'));
 const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
 const DataManagement = React.lazy(() => import('./DataManagement'));
+import NutrientFlowSankey from './NutrientFlowSankey';
 
 const HighResolutionNutrientBudget = () => {
   const SCHEMA_VERSION = 1; // Add schema version constant
@@ -356,28 +357,12 @@ const HighResolutionNutrientBudget = () => {
             </div>
           </div>
 
-          {/* Simple pathway visualization */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pathways.slice(0, 6).map(pathway => {
-              const fromKOU = kous[pathway.from];
-              const toKOU = kous[pathway.to];
-              return (
-                <div key={pathway.id} className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium text-gray-700">{fromKOU?.name || pathway.from}</div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                    <div className="font-medium text-gray-700">{toKOU?.name || pathway.to}</div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-600">
-                    {selectedNutrient}: {pathway.nutrients[selectedNutrient]} kg/yr
-                  </div>
-                  <div className="text-xs text-gray-500 capitalize">
-                    {pathway.type.replace(/_/g, ' ')}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {/* Sankey diagram visualization */}
+          <NutrientFlowSankey
+            kous={kous}
+            pathways={pathways}
+            nutrient={selectedNutrient}
+          />
         </div>
       </div>
     );
