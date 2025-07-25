@@ -63,9 +63,33 @@ export const DEFAULT_FORM_VALUES = {
     milkingCows: 180,
   },
   inputs: [
-    { source: 'concentrate', label: 'Dairy Concentrates', amount: 350, ...DEFAULT_NUTRIENT_CONTENTS.concentrate },
-    { source: 'silage', label: 'Grass Silage', amount: 2800, ...DEFAULT_NUTRIENT_CONTENTS.silage },
-    { source: 'fertiliser_N', label: 'Nitrogen Fertiliser', amount: 8500, ...DEFAULT_NUTRIENT_CONTENTS.fertiliser_N },
+    { 
+      source: 'concentrate', 
+      label: 'Dairy Concentrates', 
+      amount: 350, 
+      nContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.n,
+      pContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.p,
+      kContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.k,
+      sContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.s
+    },
+    { 
+      source: 'silage', 
+      label: 'Grass Silage', 
+      amount: 2800, 
+      nContent: DEFAULT_NUTRIENT_CONTENTS.silage.n,
+      pContent: DEFAULT_NUTRIENT_CONTENTS.silage.p,
+      kContent: DEFAULT_NUTRIENT_CONTENTS.silage.k,
+      sContent: DEFAULT_NUTRIENT_CONTENTS.silage.s
+    },
+    { 
+      source: 'fertiliser_N', 
+      label: 'Nitrogen Fertiliser', 
+      amount: 8500, 
+      nContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.n,
+      pContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.p,
+      kContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.k,
+      sContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.s
+    },
   ],
   outputs: [
     { type: 'milk', label: 'Milk Sales', amount: 1440, nContent: 0.53, pContent: 0.09 },
