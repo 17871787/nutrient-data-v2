@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Circular background -->
+  <circle cx="32" cy="32" r="30" fill="#22c55e" stroke="#16a34a" stroke-width="2"/>
+  
+  <!-- N letter for Nitrogen -->
+  <text x="32" y="42" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">N</text>
+  
+  <!-- Small circles representing nutrients -->
+  <circle cx="18" cy="18" r="4" fill="#3b82f6" opacity="0.8"/>
+  <circle cx="46" cy="18" r="4" fill="#a855f7" opacity="0.8"/>
+  <circle cx="18" cy="46" r="4" fill="#f59e0b" opacity="0.8"/>
+  <circle cx="46" cy="46" r="4" fill="#ef4444" opacity="0.8"/>
+</svg>

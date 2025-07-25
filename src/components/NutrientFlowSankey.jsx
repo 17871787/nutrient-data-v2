@@ -91,13 +91,6 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
 
       // Convert map to array
       links.push(...linkMap.values());
-
-      console.log('Sankey data processed:', { 
-        nodes: nodes.slice(0, 5),
-        nodeCount: nodes.length, 
-        linkCount: links.length,
-        sampleLinks: links.slice(0, 3) 
-      });
       
       return { nodes, links };
     } catch (error) {

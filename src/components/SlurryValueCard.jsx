@@ -6,12 +6,10 @@ import NutrientPill from './NutrientPill';
 
 export default function SlurryValueCard({ kous, pathways }) {
   // Find all manure stores
-  const manureStores = useMemo(() => {
-    console.log('All KOUs:', kous);
-    const stores = Object.values(kous).filter(k => k.type === 'manure_store');
-    console.log('Found manure stores:', stores);
-    return stores;
-  }, [kous]);
+  const manureStores = useMemo(() => 
+    Object.values(kous).filter(k => k.type === 'manure_store'),
+    [kous]
+  );
 
   // Calculate total value across all manure stores
   const totalValueData = useMemo(() => {
