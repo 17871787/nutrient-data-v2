@@ -27,15 +27,39 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
       }));
       const idToIdx = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
 
-      const links = pathways
+      // Create links, but prevent circular references
+      const linkSet = new Set();
+      const links = [];
+      
+      pathways
         .filter(p => p.nutrients?.[nutrient] > 0 && p.from !== p.to)
-        .map(p => ({
-          source: idToIdx[p.from],
-          target: idToIdx[p.to],
-          value: p.nutrients[nutrient],
-        }))
-        .filter(l => l.source !== undefined && l.target !== undefined && l.source >= 0 && l.target >= 0);
+        .forEach(p => {
+          const sourceIdx = idToIdx[p.from];
+          const targetIdx = idToIdx[p.to];
+          
+          if (sourceIdx !== undefined && targetIdx !== undefined && 
+              sourceIdx >= 0 && targetIdx >= 0 && sourceIdx !== targetIdx) {
+            // Create a unique key for this link
+            const linkKey = `${sourceIdx}-${targetIdx}`;
+            
+            // Only add if we haven't seen this exact link before
+            if (!linkSet.has(linkKey)) {
+              linkSet.add(linkKey);
+              links.push({
+                source: sourceIdx,
+                target: targetIdx,
+                value: p.nutrients[nutrient],
+              });
+            }
+          }
+        });
 
+      console.log('Sankey data processed:', { 
+        nodeCount: nodes.length, 
+        linkCount: links.length,
+        sampleLinks: links.slice(0, 3) 
+      });
+      
       return { nodes, links };
     } catch (error) {
       console.error('Error processing Sankey data:', error);
