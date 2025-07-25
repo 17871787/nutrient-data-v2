@@ -6,6 +6,10 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
   // Group pathways by type and calculate totals
   const flowAnalysis = useMemo(() => {
     try {
+      // Check if we have data
+      if (!kous || Object.keys(kous).length === 0 || !pathways || pathways.length === 0) {
+        return { flows: [], balances: {}, kousByType: {} };
+      }
       
       // Group KOUs by type
       const kousByType = Object.values(kous).reduce((acc, kou) => {
@@ -156,6 +160,23 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
               <p className="text-sm font-medium text-gray-700">Sample pathway:</p>
               <p className="text-xs text-gray-600">From: {pathways[0].from} → To: {pathways[0].to}</p>
               <p className="text-xs text-gray-600">Nutrients: {JSON.stringify(pathways[0].nutrients)}</p>
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-700">Missing KOUs:</p>
+                {pathways.slice(0, 5).map((p, i) => {
+                  const fromMissing = !kous[p.from];
+                  const toMissing = !kous[p.to];
+                  if (fromMissing || toMissing) {
+                    return (
+                      <p key={i} className="text-xs text-red-600">
+                        {fromMissing && `Missing from: ${p.from}`}
+                        {fromMissing && toMissing && ', '}
+                        {toMissing && `Missing to: ${p.to}`}
+                      </p>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
             </div>
           )}
         </div>
