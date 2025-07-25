@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { Calculator, Save, Copy, Trash2, Plus, TrendingUp, TrendingDown, DollarSign, Leaf, Droplets, Activity, AlertTriangle, Info } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calculator, Save, Copy, Trash2, Plus, TrendingUp, TrendingDown, DollarSign, Leaf, Droplets, Activity, AlertTriangle, Info, ArrowRight, CheckCircle } from 'lucide-react';
 
 const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
   const [scenarios, setScenarios] = useState({
