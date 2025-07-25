@@ -6,6 +6,7 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
   // Group pathways by type and calculate totals
   const flowAnalysis = useMemo(() => {
     try {
+      
       // Group KOUs by type
       const kousByType = Object.values(kous).reduce((acc, kou) => {
         if (!acc[kou.type]) acc[kou.type] = [];
@@ -140,11 +141,24 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
   if (flowAnalysis.flows.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center gap-3 text-amber-600">
+        <div className="flex items-center gap-3 text-amber-600 mb-4">
           <AlertCircle className="w-6 h-6" />
           <h3 className="text-lg font-bold">No Flow Data Available</h3>
         </div>
-        <p className="text-gray-600 mt-2">No nutrient pathways found for {selectedNutrient}.</p>
+        <p className="text-gray-600 mb-4">No nutrient pathways found for {selectedNutrient}.</p>
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h4 className="font-medium text-gray-700 mb-2">Debug Information:</h4>
+          <p className="text-sm text-gray-600">Total KOUs: {Object.keys(kous).length}</p>
+          <p className="text-sm text-gray-600">Total Pathways: {pathways.length}</p>
+          <p className="text-sm text-gray-600">Selected Nutrient: {selectedNutrient}</p>
+          {pathways.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm font-medium text-gray-700">Sample pathway:</p>
+              <p className="text-xs text-gray-600">From: {pathways[0].from} → To: {pathways[0].to}</p>
+              <p className="text-xs text-gray-600">Nutrients: {JSON.stringify(pathways[0].nutrients)}</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
