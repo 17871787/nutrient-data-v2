@@ -17,6 +17,7 @@ const FarmNutrientMap = React.lazy(() => import('./FarmNutrientMap'));
 const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
 const DataManagement = React.lazy(() => import('./DataManagement'));
 import NutrientFlowSankey from './NutrientFlowSankey';
+import SlurryValueCard from './SlurryValueCard';
 
 const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
   const SCHEMA_VERSION = 1; // Add schema version constant
@@ -342,6 +343,9 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
             </div>
           </div>
         </div>
+
+        {/* Slurry Value Card */}
+        <SlurryValueCard kous={kous} pathways={pathways} />
 
         {/* Nutrient Flow Summary */}
         <div className="bg-white rounded-lg shadow-lg p-6">
