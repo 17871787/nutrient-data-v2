@@ -156,26 +156,26 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
       <div className="text-xs text-gray-600 space-y-1">
         {selectedNutrient === 'N' && (
           <>
-            <div>Excess: >170 kg/ha (NVZ limit)</div>
+            <div>Excess: &gt;170 kg/ha (NVZ limit)</div>
             <div>High: 100-170 kg/ha</div>
             <div>Optimal: 50-100 kg/ha</div>
-            <div>Low: <50 kg/ha</div>
+            <div>Low: &lt;50 kg/ha</div>
           </>
         )}
         {selectedNutrient === 'P' && (
           <>
-            <div>Excess: >20 kg/ha</div>
+            <div>Excess: &gt;20 kg/ha</div>
             <div>High: 10-20 kg/ha</div>
             <div>Optimal: 5-10 kg/ha</div>
-            <div>Low: <5 kg/ha</div>
+            <div>Low: &lt;5 kg/ha</div>
           </>
         )}
         {selectedNutrient === 'K' && (
           <>
-            <div>Excess: >60 kg/ha</div>
+            <div>Excess: &gt;60 kg/ha</div>
             <div>High: 40-60 kg/ha</div>
             <div>Optimal: 20-40 kg/ha</div>
-            <div>Low: <20 kg/ha</div>
+            <div>Low: &lt;20 kg/ha</div>
           </>
         )}
       </div>
