@@ -55,24 +55,24 @@ export const DEFAULT_NUTRIENT_CONTENTS = {
   fertiliser_compound: { n: 20.0, p: 10.0, k: 10.0, s: 2.0 },
 };
 
-// Default form values
+// Default form values with realistic test data
 export const DEFAULT_FORM_VALUES = {
   farmInfo: {
-    name: '',
-    totalArea: 0,
-    milkingCows: 0,
+    name: 'Demo Farm',
+    totalArea: 120,
+    milkingCows: 180,
   },
   inputs: [
-    { source: 'concentrate', label: 'Dairy Concentrates', amount: 0, ...DEFAULT_NUTRIENT_CONTENTS.concentrate },
-    { source: 'silage', label: 'Grass Silage', amount: 0, ...DEFAULT_NUTRIENT_CONTENTS.silage },
-    { source: 'fertiliser_N', label: 'Nitrogen Fertiliser', amount: 0, ...DEFAULT_NUTRIENT_CONTENTS.fertiliser_N },
+    { source: 'concentrate', label: 'Dairy Concentrates', amount: 350, ...DEFAULT_NUTRIENT_CONTENTS.concentrate },
+    { source: 'silage', label: 'Grass Silage', amount: 2800, ...DEFAULT_NUTRIENT_CONTENTS.silage },
+    { source: 'fertiliser_N', label: 'Nitrogen Fertiliser', amount: 8500, ...DEFAULT_NUTRIENT_CONTENTS.fertiliser_N },
   ],
   outputs: [
-    { type: 'milk', label: 'Milk Sales', amount: 0, nContent: 0.53, pContent: 0.09 },
-    { type: 'livestock', label: 'Cull Cows', amount: 0, nContent: 2.5, pContent: 0.7 },
+    { type: 'milk', label: 'Milk Sales', amount: 1440, nContent: 0.53, pContent: 0.09 },
+    { type: 'livestock', label: 'Cull Cows', amount: 12000, nContent: 2.5, pContent: 0.7 },
   ],
   manure: {
-    slurryApplied: 0,
+    slurryApplied: 4200,
     slurryNContent: 2.5,
     slurryPContent: 0.5,
   },
