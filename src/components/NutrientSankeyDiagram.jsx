@@ -1,128 +1,69 @@
 import React, { useMemo } from 'react';
-import { ResponsiveContainer, Sankey, Tooltip } from 'recharts';
+import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
 
 const NutrientSankeyDiagram = ({ kous, pathways, selectedNutrient = 'N' }) => {
   // Convert KOUs and pathways to Sankey format
-  const sankeyData = useMemo(() => {
+  const { nodes, links } = useMemo(() => {
     // Create nodes from KOUs
-    const nodeMap = {};
-    const nodes = Object.values(kous).map((kou, index) => {
-      nodeMap[kou.id] = index;
-      return {
-        name: kou.name,
-        kouId: kou.id,
-        type: kou.type,
-        // Calculate total in/out for node sizing
-        totalIn: pathways
-          .filter(p => p.to === kou.id)
-          .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0),
-        totalOut: pathways
-          .filter(p => p.from === kou.id)
-          .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0)
-      };
+    const nodeMap = new Map();
+    Object.values(kous).forEach((kou) => {
+      nodeMap.set(kou.id, { name: kou.name, type: kou.type, id: kou.id });
     });
-
-    // Create links from pathways
+    
+    const nodes = Array.from(nodeMap.entries()).map(([id, data]) => ({ 
+      name: data.name, 
+      type: data.type,
+      id: data.id
+    }));
+    
     const links = pathways
-      .filter(pathway => pathway.nutrients[selectedNutrient] > 0)
-      .map(pathway => ({
-        source: nodeMap[pathway.from],
-        target: nodeMap[pathway.to],
-        value: pathway.nutrients[selectedNutrient],
-        pathwayType: pathway.type,
-        nutrientAmount: pathway.nutrients[selectedNutrient]
+      .filter(p => p.nutrients[selectedNutrient] > 0)
+      .map(p => ({
+        source: nodes.findIndex(n => n.id === p.from),
+        target: nodes.findIndex(n => n.id === p.to),
+        value: p.nutrients[selectedNutrient] || 0,
+        pathwayType: p.type
       }))
-      .filter(link => link.source !== undefined && link.target !== undefined);
+      .filter(l => l.value > 0 && l.source !== -1 && l.target !== -1);
 
     return { nodes, links };
   }, [kous, pathways, selectedNutrient]);
 
+  const nodeColors = {
+    'field': '#10b981',
+    'livestock_group': '#3b82f6',
+    'feed_store': '#f59e0b',
+    'manure_store': '#f97316',
+    'output': '#8b5cf6',
+    'external': '#6b7280'
+  };
+
   // Custom node component
   const CustomNode = ({ x, y, width, height, index, payload }) => {
-    const fillColor = {
-      field: '#10b981',
-      livestock_group: '#3b82f6',
-      feed_store: '#f59e0b',
-      manure_store: '#f97316',
-      output: '#8b5cf6',
-      external: '#6b7280'
-    }[payload.type] || '#94a3b8';
-
+    const nodeData = nodes[index];
+    if (!nodeData) return null;
+    
     return (
-      <g>
-        <rect
+      <Layer key={`custom-node-${index}`}>
+        <Rectangle
           x={x}
           y={y}
           width={width}
           height={height}
-          fill={fillColor}
-          fillOpacity={0.8}
-          stroke={fillColor}
-          strokeWidth={2}
-          rx={3}
+          fill={nodeColors[nodeData.type] || '#94a3b8'}
+          fillOpacity="1"
         />
         <text
-          x={x + width / 2}
+          textAnchor={x > 500 ? 'end' : 'start'}
+          x={x > 500 ? x - 6 : x + width + 6}
           y={y + height / 2}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={12}
-          fill="white"
-          fontWeight="bold"
+          fontSize="12"
+          fill="#333"
+          alignmentBaseline="middle"
         >
-          {payload.name}
+          {nodeData.name}
         </text>
-        <text
-          x={x + width / 2}
-          y={y + height / 2 + 14}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={10}
-          fill="white"
-          opacity={0.8}
-        >
-          {selectedNutrient}: {(payload.totalIn - payload.totalOut).toFixed(0)} kg
-        </text>
-      </g>
-    );
-  };
-
-  // Custom link component
-  const CustomLink = ({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index, payload }) => {
-    const gradientId = `gradient-${index}`;
-    
-    // Different colors for different pathway types
-    const linkColor = {
-      feeding: '#3b82f6',
-      manure_production: '#f97316',
-      manure_application: '#8b4513',
-      fertilizer_application: '#10b981',
-      harvest: '#84cc16',
-      sale: '#8b5cf6',
-      grazing: '#22c55e',
-      atmospheric_loss: '#ef4444',
-      leaching_loss: '#dc2626',
-      runoff_loss: '#b91c1c'
-    }[payload.pathwayType] || '#94a3b8';
-
-    return (
-      <g>
-        <defs>
-          <linearGradient id={gradientId}>
-            <stop offset="0%" stopColor={linkColor} stopOpacity={0.4} />
-            <stop offset="100%" stopColor={linkColor} stopOpacity={0.6} />
-          </linearGradient>
-        </defs>
-        <path
-          d={`
-            M${sourceX},${sourceY}
-            C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
-          `}
-          stroke={`url(#${gradientId})`}
-          strokeWidth={linkWidth}
-          fill="none"
-        />
-      </g>
+      </Layer>
     );
   };
 
@@ -130,33 +71,23 @@ const NutrientSankeyDiagram = ({ kous, pathways, selectedNutrient = 'N' }) => {
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
-      if (data.payload.source !== undefined) {
-        // Link tooltip
+      if (data.payload && typeof data.payload.source === 'number' && typeof data.payload.target === 'number') {
+        const sourceNode = nodes[data.payload.source];
+        const targetNode = nodes[data.payload.target];
+        
         return (
           <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-            <p className="font-medium text-gray-900">
-              {sankeyData.nodes[data.payload.source].name} → {sankeyData.nodes[data.payload.target].name}
+            <p className="text-sm font-medium text-gray-900">
+              {sourceNode?.name} → {targetNode?.name}
             </p>
-            <p className="text-sm text-gray-600 capitalize">
-              {data.payload.pathwayType.replace(/_/g, ' ')}
+            <p className="text-sm text-gray-600">
+              {selectedNutrient}: {data.value?.toLocaleString()} kg
             </p>
-            <p className="text-sm font-bold text-blue-600">
-              {selectedNutrient}: {data.payload.nutrientAmount.toFixed(0)} kg/year
-            </p>
-          </div>
-        );
-      } else {
-        // Node tooltip
-        return (
-          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-            <p className="font-medium text-gray-900">{data.payload.name}</p>
-            <div className="text-sm space-y-1 mt-1">
-              <p className="text-green-600">In: {data.payload.totalIn.toFixed(0)} kg</p>
-              <p className="text-red-600">Out: {data.payload.totalOut.toFixed(0)} kg</p>
-              <p className="font-bold">
-                Net: {(data.payload.totalIn - data.payload.totalOut).toFixed(0)} kg
+            {data.payload.pathwayType && (
+              <p className="text-xs text-gray-500 capitalize">
+                {data.payload.pathwayType.replace(/_/g, ' ')}
               </p>
-            </div>
+            )}
           </div>
         );
       }
@@ -168,69 +99,61 @@ const NutrientSankeyDiagram = ({ kous, pathways, selectedNutrient = 'N' }) => {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="mb-4">
         <h3 className="text-lg font-bold text-gray-900">
-          Nutrient Flow Diagram - {selectedNutrient}
+          {selectedNutrient} Nutrient Pathways
         </h3>
         <p className="text-sm text-gray-600">
-          Interactive visualization of nutrient pathways through the farm system
+          Visualizing nutrient flows through the farm system
         </p>
       </div>
       
-      <div className="h-[600px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ width: '100%', height: 500 }}>
+        <ResponsiveContainer>
           <Sankey
-            data={sankeyData}
-            node={<CustomNode />}
-            link={<CustomLink />}
-            nodePadding={40}
-            nodeWidth={20}
-            sort={false}
-            iterations={0}
+            data={{ nodes, links }}
+            node={CustomNode}
+            nodePadding={50}
+            nodeWidth={10}
+            margin={{ top: 20, right: 150, bottom: 20, left: 150 }}
+            link={{ stroke: '#94a3b8', strokeOpacity: 0.5 }}
           >
             <Tooltip content={<CustomTooltip />} />
           </Sankey>
         </ResponsiveContainer>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 border-t pt-4">
-        <div className="text-sm font-medium text-gray-700 mb-2">Node Types:</div>
-        <div className="flex flex-wrap gap-3">
-          {[
-            { type: 'field', label: 'Fields', color: '#10b981' },
-            { type: 'livestock_group', label: 'Livestock', color: '#3b82f6' },
-            { type: 'feed_store', label: 'Feed Stores', color: '#f59e0b' },
-            { type: 'manure_store', label: 'Manure Stores', color: '#f97316' },
-            { type: 'output', label: 'Outputs', color: '#8b5cf6' },
-            { type: 'external', label: 'External', color: '#6b7280' }
-          ].map(item => (
-            <div key={item.type} className="flex items-center gap-2">
-              <div 
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-xs text-gray-600">{item.label}</span>
-            </div>
-          ))}
+      {/* Summary Stats */}
+      <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="text-sm text-gray-600">Total Inputs</div>
+          <div className="text-xl font-bold text-blue-600">
+            {pathways
+              .filter(p => kous[p.from]?.type === 'external')
+              .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0)
+              .toLocaleString()} kg
+          </div>
         </div>
-        
-        <div className="text-sm font-medium text-gray-700 mb-2 mt-3">Pathway Types:</div>
-        <div className="flex flex-wrap gap-3">
-          {[
-            { type: 'feeding', label: 'Feeding', color: '#3b82f6' },
-            { type: 'manure_production', label: 'Manure Production', color: '#f97316' },
-            { type: 'fertilizer_application', label: 'Fertilizer', color: '#10b981' },
-            { type: 'harvest', label: 'Harvest', color: '#84cc16' },
-            { type: 'sale', label: 'Sales', color: '#8b5cf6' },
-            { type: 'loss', label: 'Losses', color: '#ef4444' }
-          ].map(item => (
-            <div key={item.type} className="flex items-center gap-2">
-              <div 
-                className="w-8 h-2 rounded"
-                style={{ backgroundColor: item.color, opacity: 0.6 }}
-              />
-              <span className="text-xs text-gray-600">{item.label}</span>
-            </div>
-          ))}
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="text-sm text-gray-600">Total Outputs</div>
+          <div className="text-xl font-bold text-green-600">
+            {pathways
+              .filter(p => kous[p.to]?.type === 'output')
+              .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0)
+              .toLocaleString()} kg
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-4">
+          <div className="text-sm text-gray-600">System Efficiency</div>
+          <div className="text-xl font-bold text-purple-600">
+            {(() => {
+              const inputs = pathways
+                .filter(p => kous[p.from]?.type === 'external')
+                .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0);
+              const productiveOutputs = pathways
+                .filter(p => p.to === 'milk_output' || p.to === 'livestock_sales' || p.to === 'crop_sales')
+                .reduce((sum, p) => sum + (p.nutrients[selectedNutrient] || 0), 0);
+              return inputs > 0 ? ((productiveOutputs / inputs) * 100).toFixed(1) : '0';
+            })()}%
+          </div>
         </div>
       </div>
     </div>
