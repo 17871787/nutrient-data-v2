@@ -535,3 +535,5 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
     </div>
   );
 }
+
+export default SimpleEntryMode;
