@@ -3,6 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ArrowRight, Package, Beaker, MapPin, Milk, Factory, TrendingDown, AlertCircle } from 'lucide-react';
 
 const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
+  // Helper function to format KOU type names
+  const formatKOUTypeName = (type) => {
+    if (!type) return '';
+    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   // Group pathways by type and calculate totals
   const flowAnalysis = useMemo(() => {
     try {
@@ -20,10 +26,16 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
 
       // Calculate flows between KOU types
       const flowMap = new Map();
+      let processedCount = 0;
+      let skippedCount = 0;
+      
       pathways.forEach(pathway => {
         const fromKOU = kous[pathway.from];
         const toKOU = kous[pathway.to];
-        if (!fromKOU || !toKOU) return;
+        if (!fromKOU || !toKOU) {
+          skippedCount++;
+          return;
+        }
 
         const flowKey = `${fromKOU.type}_to_${toKOU.type}`;
         if (!flowMap.has(flowKey)) {
@@ -40,6 +52,7 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
         const flow = flowMap.get(flowKey);
         flow.pathways.push(pathway);
         flow.total += pathway.nutrients[selectedNutrient] || 0;
+        processedCount++;
       });
 
       // Convert to array and sort by total
@@ -67,10 +80,10 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
         };
       });
 
-      return { flows, balances, kousByType };
+      return { flows, balances, kousByType, processedCount, skippedCount };
     } catch (error) {
       console.error('Error in flow analysis:', error);
-      return { flows: [], balances: {}, kousByType: {} };
+      return { flows: [], balances: {}, kousByType: {}, error: error.message, processedCount: 0, skippedCount: 0 };
     }
   }, [kous, pathways, selectedNutrient]);
 
@@ -96,11 +109,6 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
       'external': '#6b7280'
     };
     return colors[type] || '#94a3b8';
-  };
-
-  const formatKOUTypeName = (type) => {
-    if (!type) return '';
-    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   // Prepare data for balance chart
@@ -155,6 +163,11 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
           <p className="text-sm text-gray-600">Total KOUs: {Object.keys(kous).length}</p>
           <p className="text-sm text-gray-600">Total Pathways: {pathways.length}</p>
           <p className="text-sm text-gray-600">Selected Nutrient: {selectedNutrient}</p>
+          <p className="text-sm text-gray-600">Processed Pathways: {flowAnalysis.processedCount || 0}</p>
+          <p className="text-sm text-gray-600">Skipped Pathways: {flowAnalysis.skippedCount || 0}</p>
+          {flowAnalysis.error && (
+            <p className="text-sm text-red-600">Error: {flowAnalysis.error}</p>
+          )}
           {pathways.length > 0 && (
             <div className="mt-2">
               <p className="text-sm font-medium text-gray-700">Sample pathway:</p>
