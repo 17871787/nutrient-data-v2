@@ -47,6 +47,7 @@ export function InputRow({
                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                        disabled:bg-gray-100 disabled:cursor-not-allowed`}
             placeholder={placeholder}
+            defaultValue={type === 'number' ? undefined : ''} // Let react-hook-form handle the default
             {...inputProps}
           />
           
