@@ -1,0 +1,156 @@
+# Nutrient Budget Tool - Technical Documentation
+
+## Project Overview
+A React-based farm nutrient management system with dual-mode interface: Simple (wizard) and Pro (KOU-based).
+Built with Vite, React 18, Tailwind CSS, Recharts, React Hook Form + Zod.
+
+## Architecture Goals
+1. Progressive disclosure - start simple, reveal complexity when needed
+2. Data persistence with schema versioning
+3. Economic value visualization 
+4. Compliance checking (NVZ 170kg N/ha limit)
+5. Bidirectional mode switching with data preservation
+
+## Core Data Models
+
+### KOU (Key Operational Unit)
+```javascript
+{
+  id: string,
+  type: 'field' | 'livestock_group' | 'feed_store' | 'manure_store' | 'output' | 'external',
+  name: string,
+  properties: {
+    // Type-specific: area, capacity, animalCount, nutrientContent, etc.
+  }
+}
+```
+
+### Pathway (Nutrient Transfer)
+```javascript
+{
+  id: string,
+  from: string, // KOU id
+  to: string,   // KOU id
+  type: 'feeding' | 'manure_application' | 'fertilizer_application' | ...,
+  nutrients: { N: number, P: number, K: number, S: number }
+}
+```
+
+## Key Components & Functions
+
+### /src/App.jsx
+- `App()` - Root component managing mode state
+- Switches between SimpleEntryMode and HighResolutionNutrientBudget
+
+### /src/components/SimpleEntry/SimpleEntryMode.jsx
+- `SimpleEntryMode({ onSwitchToPro, onSaveData })` - 5-step wizard
+- Uses React Hook Form with Zod validation
+- Steps: Farm Basics → Inputs → Outputs → Manure → Review
+
+### /src/components/HighResolutionNutrientBudget.jsx
+- `HighResolutionNutrientBudget({ initialData, onSwitchToSimple })` - Pro mode dashboard
+- Manages KOUs and pathways state
+- Views: Overview, Pathways, Field Map, Scenarios
+
+### /src/components/SlurryValueCard.jsx
+- `SlurryValueCard({ kous, pathways })` - Economic value display
+- `calculateKOUBalance(kou, pathways)` - Sums nutrient flows
+- Uses FERTILISER_PRICES constants
+
+### /src/components/NutrientFlowSankey.jsx
+- `NutrientFlowSankey({ kous, pathways, nutrient })` - Sankey diagram
+- Handles special nodes (atmosphere) not in KOU list
+- Prevents circular references
+
+### /src/data/kouStructure.js
+- `createKOU(type, id, name, properties)` - KOU factory
+- `createPathway(from, to, type, nutrients)` - Pathway factory
+- `createFarmKOUStructure(farmData)` - Generates default farm
+- `calculateKOUBalance(kou, pathways)` - Nutrient balance calc
+
+### /src/utils/dataTransformers.js
+- `transformToKOUs(simpleData)` - Converts wizard data → KOU structure
+Returns: `{ kous: Object, pathways: Array }`
+
+### /src/utils/simpleCalculations.js
+- `calculateSimpleBalance(formData)` - Simple mode calculations
+Returns: `{ totalInputs, totalOutputs, balance, nvzCompliant, nEfficiency }`
+
+### /src/schemas/simpleEntrySchema.js
+- Zod schemas for form validation
+- DEFAULT_NUTRIENT_CONTENTS - Feed/fertilizer nutrient percentages
+- DEFAULT_FORM_VALUES - Pre-filled demo data
+
+### /src/constants/prices.js
+- FERTILISER_PRICES: { N: 0.85, P: 1.45, K: 0.70, S: 0.25 } £/kg
+
+## Component Connections (ASCII)
+```
+                    App.jsx
+                      |
+          +-----------+-----------+
+          |                       |
+    SimpleEntryMode        HighResolutionNutrientBudget
+          |                       |
+          |                  +----+----+----+----+
+    InputRow.jsx             |    |    |    |    |
+          |            SlurryValueCard |    |    |
+    transformToKOUs          |         |    |    |
+          |           NutrientFlowSankey    |    |
+          |                  |              |    |
+          |          NutrientPathwaysView   |    |
+          |                  |              |    |
+          |            FarmNutrientMap      |    |
+          |                  |              |    |
+          |            ScenarioPlanning     |    |
+          |                  |                   |
+          |             DataManagement-----------+
+          |                  |
+          +------------------+
+                   |
+              kouStructure.js
+              (shared data model)
+```
+
+## Code Style Guide
+- Functional components with hooks
+- Prop destructuring in parameters
+- useMemo for expensive calculations
+- Tailwind for styling (no CSS files)
+- Error boundaries for graceful failures
+- Lazy loading for code splitting
+- Accessibility: proper labels, ARIA, keyboard nav
+
+## Data Formats
+- localStorage: JSON with schemaVersion
+- Nutrient units: kg (except feed in tonnes)
+- Monetary: GBP (£)
+- Area: hectares
+- Volume: m³ (slurry)
+- All nutrient objects: { N, P, K, S }
+
+## Current State Analysis
+**Strengths:**
+- Clean separation between Simple/Pro modes
+- Reusable calculation engine
+- Type-safe with Zod validation
+- Good performance (code splitting, memoization)
+- Accessible form components
+
+**Technical Debt:**
+- Some components >300 lines (consider splitting)
+- Hardcoded IDs in example pathways
+- No unit tests
+- Limited error recovery in Sankey
+
+**Extension Points:**
+- Additional economic cards (per-field ROI, scenario costing)
+- API integration for prices
+- Multi-farm support
+- Historical tracking
+- Mobile app wrapper
+
+## Deployment
+- Vercel deployment with automatic builds
+- Environment: Vite production build
+- Bundle size: ~493KB (152KB gzipped)
