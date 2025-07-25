@@ -26,16 +26,23 @@ export function InputRow({
 
   const error = getFieldError(field, errors);
 
+  // Generate unique ID for accessibility
+  const inputId = `input-${field.replace(/\./g, '-')}`;
+
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2">
-        <label className="w-40 text-sm font-medium text-gray-700 flex-shrink-0">
+        <label 
+          htmlFor={inputId}
+          className="w-40 text-sm font-medium text-gray-700 flex-shrink-0"
+        >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
         
         <div className="flex-1 relative">
           <input
+            id={inputId}
             {...register(field, { 
               valueAsNumber: type === 'number',
               required: required ? `${label} is required` : false
@@ -98,12 +105,14 @@ export function InlineInputRow({
   };
 
   const error = getFieldError(field, errors);
+  const inputId = `inline-input-${field.replace(/\./g, '-')}`;
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <label className="text-xs text-gray-600">{label}</label>
+      <label htmlFor={inputId} className="text-xs text-gray-600">{label}</label>
       <div className="relative">
         <input
+          id={inputId}
           {...register(field, { valueAsNumber: true })}
           type="text"
           inputMode="decimal"
