@@ -18,7 +18,7 @@ const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
 const DataManagement = React.lazy(() => import('./DataManagement'));
 import NutrientFlowSankey from './NutrientFlowSankey';
 
-const HighResolutionNutrientBudget = () => {
+const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
   const SCHEMA_VERSION = 1; // Add schema version constant
   const [selectedFarmId, setSelectedFarmId] = useState('FARM-001');
   const [activeView, setActiveView] = useState('overview');
@@ -30,6 +30,13 @@ const HighResolutionNutrientBudget = () => {
 
   // Initialize KOU structure
   useEffect(() => {
+    // If we have initial data from Simple mode, use it
+    if (initialData && initialData.kous && initialData.pathways) {
+      setKous(initialData.kous);
+      setPathways(initialData.pathways);
+      return;
+    }
+    
     // Try to load from localStorage first
     const savedData = localStorage.getItem('nutrientBudgetAdvanced');
     if (savedData) {
@@ -532,6 +539,15 @@ const HighResolutionNutrientBudget = () => {
               <p className="text-sm text-gray-600">Key Operational Units (KOU) Analysis</p>
             </div>
             <div className="flex items-center gap-4">
+              {onSwitchToSimple && (
+                <button
+                  onClick={onSwitchToSimple}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                >
+                  <ArrowRight className="w-4 h-4 rotate-180" />
+                  Simple Mode
+                </button>
+              )}
               <button
                 onClick={() => setShowDataManagement(true)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"

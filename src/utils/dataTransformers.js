@@ -1,0 +1,179 @@
+import { createKOU, createPathway, KOU_TYPES, PATHWAY_TYPES } from '../data/kouStructure';
+
+// Transform simple entry data to KOU/Pathway structure
+export function transformToKOUs(simpleData) {
+  const { farmInfo, inputs, outputs, manure } = simpleData;
+  const kous = {};
+  const pathways = [];
+  
+  // Create farm KOU
+  const farmId = `farm_${farmInfo.name.toLowerCase().replace(/\s+/g, '_')}`;
+  kous[farmId] = createKOU(farmId, `${farmInfo.name} Farm`, KOU_TYPES.FIELD, {
+    area: farmInfo.totalArea,
+    use: 'mixed_farming',
+  });
+  
+  // Create main field KOU (aggregate)
+  const mainFieldId = 'field_main';
+  kous[mainFieldId] = createKOU(mainFieldId, 'Main Fields', KOU_TYPES.FIELD, {
+    area: farmInfo.totalArea,
+    use: 'mixed_cropping',
+  });
+  
+  // Create livestock group
+  const livestockId = 'herd_main';
+  kous[livestockId] = createKOU(livestockId, 'Dairy Herd', KOU_TYPES.LIVESTOCK_GROUP, {
+    animalCount: farmInfo.milkingCows,
+    milkYield: 8000, // Assume average yield
+    group: 'milking_cows',
+  });
+  
+  // Create feed store
+  const feedStoreId = 'feed_store_main';
+  kous[feedStoreId] = createKOU(feedStoreId, 'Feed Store', KOU_TYPES.FEED_STORE, {
+    capacity: 500, // Estimate based on cow numbers
+    currentStock: 250,
+  });
+  
+  // Create manure store
+  const slurryStoreId = 'slurry_store_main';
+  kous[slurryStoreId] = createKOU(slurryStoreId, 'Slurry Store', KOU_TYPES.MANURE_STORE, {
+    capacity: 5000, // Estimate
+    currentStock: manure.slurryApplied || 0,
+    nutrientContent: { N: manure.slurryNContent || 2.5, P: manure.slurryPContent || 0.5 },
+  });
+  
+  // Create external suppliers
+  const feedSupplierId = 'feed_supplier';
+  kous[feedSupplierId] = createKOU(feedSupplierId, 'Feed Supplier', KOU_TYPES.EXTERNAL, {});
+  
+  const fertilizerSupplierId = 'fertilizer_supplier';
+  kous[fertilizerSupplierId] = createKOU(fertilizerSupplierId, 'Fertilizer Supplier', KOU_TYPES.EXTERNAL, {});
+  
+  // Create outputs
+  const milkOutputId = 'milk_output';
+  kous[milkOutputId] = createKOU(milkOutputId, 'Milk Sales', KOU_TYPES.OUTPUT, {});
+  
+  const livestockSalesId = 'livestock_sales';
+  kous[livestockSalesId] = createKOU(livestockSalesId, 'Livestock Sales', KOU_TYPES.OUTPUT, {});
+  
+  // Transform inputs to pathways
+  inputs.forEach((input, index) => {
+    if (input.amount > 0) {
+      const amount = input.amount;
+      const multiplier = input.source?.includes('fertiliser') ? 1 : 1000; // kg for fertilizer, tonnes to kg for feed
+      
+      const nutrients = {
+        N: (amount * multiplier * (input.nContent || 0)) / 100,
+        P: (amount * multiplier * (input.pContent || 0)) / 100,
+        K: (amount * multiplier * (input.kContent || 0)) / 100,
+        S: (amount * multiplier * (input.sContent || 0)) / 100,
+      };
+      
+      if (input.source?.includes('fertiliser')) {
+        // Fertilizer goes directly to fields
+        pathways.push(
+          createPathway(
+            fertilizerSupplierId,
+            mainFieldId,
+            PATHWAY_TYPES.FERTILIZER_APPLICATION,
+            nutrients
+          )
+        );
+      } else {
+        // Feed goes to feed store first
+        pathways.push(
+          createPathway(
+            feedSupplierId,
+            feedStoreId,
+            PATHWAY_TYPES.PURCHASE,
+            nutrients
+          )
+        );
+        // Then from feed store to livestock
+        pathways.push(
+          createPathway(
+            feedStoreId,
+            livestockId,
+            PATHWAY_TYPES.FEEDING,
+            nutrients
+          )
+        );
+      }
+    }
+  });
+  
+  // Transform outputs to pathways
+  outputs.forEach((output) => {
+    if (output.amount > 0) {
+      const amount = output.amount;
+      const multiplier = output.type === 'milk' ? 1000 : 1; // tonnes to kg for milk
+      
+      const nutrients = {
+        N: (amount * multiplier * (output.nContent || 0)) / 100,
+        P: (amount * multiplier * (output.pContent || 0)) / 100,
+        K: 0,
+        S: 0,
+      };
+      
+      const targetId = output.type === 'milk' ? milkOutputId : livestockSalesId;
+      pathways.push(
+        createPathway(
+          livestockId,
+          targetId,
+          PATHWAY_TYPES.SALE,
+          nutrients
+        )
+      );
+    }
+  });
+  
+  // Create manure pathways
+  if (manure.slurryApplied > 0) {
+    // Livestock to manure store
+    const manureProduction = {
+      N: manure.slurryApplied * (manure.slurryNContent || 2.5),
+      P: manure.slurryApplied * (manure.slurryPContent || 0.5),
+      K: manure.slurryApplied * 3, // Estimate
+      S: manure.slurryApplied * 0.3, // Estimate
+    };
+    
+    pathways.push(
+      createPathway(
+        livestockId,
+        slurryStoreId,
+        PATHWAY_TYPES.MANURE_PRODUCTION,
+        manureProduction
+      )
+    );
+    
+    // Manure store to fields
+    pathways.push(
+      createPathway(
+        slurryStoreId,
+        mainFieldId,
+        PATHWAY_TYPES.MANURE_APPLICATION,
+        manureProduction
+      )
+    );
+  }
+  
+  // Add some estimated losses
+  const totalFieldN = pathways
+    .filter(p => p.to === mainFieldId)
+    .reduce((sum, p) => sum + p.nutrients.N, 0);
+  
+  if (totalFieldN > 0) {
+    // Atmospheric losses from fields
+    pathways.push(
+      createPathway(
+        mainFieldId,
+        'atmosphere',
+        PATHWAY_TYPES.ATMOSPHERIC_LOSS,
+        { N: totalFieldN * 0.1, P: 0, K: 0, S: totalFieldN * 0.01 }
+      )
+    );
+  }
+  
+  return { kous, pathways };
+}
