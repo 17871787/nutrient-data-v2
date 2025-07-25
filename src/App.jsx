@@ -1,7 +1,7 @@
-import NutrientBudgetingMVP from './components/NutrientBudgetingMVP'
+import HighResolutionNutrientBudget from './components/HighResolutionNutrientBudget'
 
 function App() {
-  return <NutrientBudgetingMVP />
+  return <HighResolutionNutrientBudget />
 }
 
 export default App
