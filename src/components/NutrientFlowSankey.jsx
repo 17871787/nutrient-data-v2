@@ -20,41 +20,38 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
         return { nodes: [], links: [] };
       }
 
-      const nodes = Object.values(kous).map(k => ({
-        id: k.id,
-        name: k.name,
-        colour: nodeColours[k.type] ?? '#9ca3af',
-      }));
-      const idToIdx = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
+      // Create nodes array with just names (simpler structure)
+      const nodes = Object.values(kous).map((k, index) => k.name);
+      
+      // Create a mapping from KOU id to array index
+      const kouIds = Object.values(kous).map(k => k.id);
+      const idToIdx = Object.fromEntries(kouIds.map((id, i) => [id, i]));
 
-      // Create links, but prevent circular references
-      const linkSet = new Set();
+      // Create links array
       const links = [];
       
-      pathways
-        .filter(p => p.nutrients?.[nutrient] > 0 && p.from !== p.to)
-        .forEach(p => {
+      pathways.forEach(p => {
+        // Only include pathways with positive nutrient values
+        if (p.nutrients?.[nutrient] > 0 && p.from && p.to && p.from !== p.to) {
           const sourceIdx = idToIdx[p.from];
           const targetIdx = idToIdx[p.to];
           
+          // Make sure both indices exist and are valid
           if (sourceIdx !== undefined && targetIdx !== undefined && 
-              sourceIdx >= 0 && targetIdx >= 0 && sourceIdx !== targetIdx) {
-            // Create a unique key for this link
-            const linkKey = `${sourceIdx}-${targetIdx}`;
-            
-            // Only add if we haven't seen this exact link before
-            if (!linkSet.has(linkKey)) {
-              linkSet.add(linkKey);
-              links.push({
-                source: sourceIdx,
-                target: targetIdx,
-                value: p.nutrients[nutrient],
-              });
-            }
+              sourceIdx >= 0 && targetIdx >= 0 && 
+              sourceIdx < nodes.length && targetIdx < nodes.length &&
+              sourceIdx !== targetIdx) {
+            links.push({
+              source: sourceIdx,
+              target: targetIdx,
+              value: p.nutrients[nutrient]
+            });
           }
-        });
+        }
+      });
 
       console.log('Sankey data processed:', { 
+        nodes: nodes.slice(0, 5),
         nodeCount: nodes.length, 
         linkCount: links.length,
         sampleLinks: links.slice(0, 3) 
@@ -67,21 +64,7 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
     }
   }, [kous, pathways, nutrient]);
 
-  const Node = ({ x, y, width, height, index }) => {
-    const node = data.nodes[index];
-    if (!node) return null;
-    
-    return (
-      <>
-        <Rectangle x={x} y={y} width={width} height={height}
-                   fill={node.colour || '#9ca3af'} stroke="#374151" />
-        <text x={x + width + 6} y={y + height / 2}
-              alignmentBaseline="middle" fontSize={12} fill="#374151">
-          {node.name || ''}
-        </text>
-      </>
-    );
-  };
+  // Remove custom node renderer for now to isolate the issue
 
   // Show loading or empty state if no data
   if (!data.nodes.length || !data.links.length) {
@@ -98,7 +81,6 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
         <ResponsiveContainer>
           <Sankey
             data={data}
-            node={Node}
             nodePadding={50}
             link={{ stroke: '#60a5fa', strokeOpacity: 0.45 }}
             margin={{ top: 20, right: 20, bottom: 20, left: 20 }}

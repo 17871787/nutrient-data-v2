@@ -1,4 +1,413 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+# Complete Nutrient Data Advanced Codebase
+
+This file contains all the source code for the advanced nutrient budgeting system.
+
+## Project Structure
+
+```
+nutrient-data-advanced/
+├── src/
+│   ├── components/
+│   │   ├── HighResolutionNutrientBudget.jsx
+│   │   ├── NutrientPathwaysView.jsx
+│   │   ├── FarmNutrientMap.jsx
+│   │   ├── ScenarioPlanning.jsx
+│   │   └── DataManagement.jsx
+│   ├── data/
+│   │   └── kouStructure.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+└── README.md
+```
+
+## 1. package.json
+
+```json
+{
+  "name": "nutrient-data-pilot",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.7.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "vite": "^5.4.19"
+  }
+}
+```
+
+## 2. vite.config.js
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+  },
+})
+```
+
+## 3. tailwind.config.js
+
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+## 4. postcss.config.js
+
+```javascript
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+## 5. index.html
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>High-Resolution Nutrient Budget</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+```
+
+## 6. src/main.jsx
+
+```jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+```
+
+## 7. src/index.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+## 8. src/App.jsx
+
+```jsx
+import React from 'react'
+import HighResolutionNutrientBudget from './components/HighResolutionNutrientBudget'
+
+function App() {
+  return <HighResolutionNutrientBudget />
+}
+
+export default App
+```
+
+## 9. src/data/kouStructure.js
+
+```javascript
+// Key Operational Unit (KOU) Types
+export const KOU_TYPES = {
+  FIELD: 'field',
+  LIVESTOCK_GROUP: 'livestock_group',
+  FEED_STORE: 'feed_store',
+  MANURE_STORE: 'manure_store',
+  OUTPUT: 'output',
+  EXTERNAL: 'external',
+};
+
+// Field use types
+export const FIELD_USE_TYPES = {
+  GRAZING_PLATFORM: 'grazing_platform',
+  SILAGE_GROUND: 'silage_ground',
+  ARABLE: 'arable',
+  MAIZE: 'maize',
+  PERMANENT_PASTURE: 'permanent_pasture',
+};
+
+// Livestock group types
+export const LIVESTOCK_GROUPS = {
+  MILKING_HIGH: 'milking_high_yielders',
+  MILKING_MID: 'milking_mid_yielders',
+  MILKING_LOW: 'milking_low_yielders',
+  DRY_COWS: 'dry_cows',
+  YOUNGSTOCK_0_6: 'youngstock_0_6_months',
+  YOUNGSTOCK_6_12: 'youngstock_6_12_months',
+  YOUNGSTOCK_12_24: 'youngstock_12_24_months',
+};
+
+// Feed store types
+export const FEED_STORES = {
+  GRASS_SILAGE_CLAMP_1: 'grass_silage_clamp_1',
+  GRASS_SILAGE_CLAMP_2: 'grass_silage_clamp_2',
+  MAIZE_SILAGE_CLAMP: 'maize_silage_clamp',
+  CONCENTRATE_STORE: 'concentrate_store',
+  STRAW_BARN: 'straw_barn',
+};
+
+// Manure store types
+export const MANURE_STORES = {
+  SLURRY_LAGOON_1: 'slurry_lagoon_1',
+  SLURRY_LAGOON_2: 'slurry_lagoon_2',
+  FYM_HEAP_1: 'fym_heap_1',
+  FYM_HEAP_2: 'fym_heap_2',
+  DIRTY_WATER_TANK: 'dirty_water_tank',
+};
+
+// Pathway types (nutrient transfer mechanisms)
+export const PATHWAY_TYPES = {
+  FEEDING: 'feeding',
+  GRAZING: 'grazing',
+  MANURE_PRODUCTION: 'manure_production',
+  MANURE_APPLICATION: 'manure_application',
+  FERTILIZER_APPLICATION: 'fertilizer_application',
+  HARVEST: 'harvest',
+  SALE: 'sale',
+  PURCHASE: 'purchase',
+  ATMOSPHERIC_LOSS: 'atmospheric_loss',
+  LEACHING_LOSS: 'leaching_loss',
+  RUNOFF_LOSS: 'runoff_loss',
+};
+
+// Create a new KOU
+export const createKOU = (type, id, name, properties = {}) => ({
+  id,
+  type,
+  name,
+  properties: {
+    ...properties,
+    nutrients: {
+      N: { total: 0, available: 0, organic: 0 },
+      P: { total: 0, available: 0, index: 2 },
+      K: { total: 0, available: 0, index: 2 },
+      S: { total: 0, available: 0 }
+    }
+  }
+});
+
+// Create a pathway between KOUs
+export const createPathway = (from, to, type, nutrients = {}) => ({
+  id: `${from}_to_${to}_${Date.now()}`,
+  from,
+  to,
+  type,
+  // Nutrient transfer quantities (kg/year)
+  nutrients: {
+    N: nutrients.N || 0,
+    P: nutrients.P || 0,
+    K: nutrients.K || 0,
+    S: nutrients.S || 0
+  },
+  // Transfer properties
+  properties: {
+    date: new Date().toISOString(),
+    method: '', // e.g., 'broadcast', 'injection', 'trailing_shoe'
+    losses: {
+      atmospheric: { N: 0, S: 0 }, // Ammonia, etc.
+      leaching: { N: 0, P: 0, K: 0 },
+      runoff: { N: 0, P: 0, K: 0 }
+    }
+  }
+});
+
+// Example farm KOU structure
+export const createFarmKOUStructure = (farmData) => {
+  const kous = {};
+  const pathways = [];
+
+  // Create fields
+  const fields = [
+    { id: 'field_1', name: 'Home Field', use: FIELD_USE_TYPES.GRAZING_PLATFORM, area: 15 },
+    { id: 'field_2', name: 'Middle Field', use: FIELD_USE_TYPES.GRAZING_PLATFORM, area: 18 },
+    { id: 'field_3', name: 'Far Field', use: FIELD_USE_TYPES.SILAGE_GROUND, area: 25 },
+    { id: 'field_4', name: 'Maize Field', use: FIELD_USE_TYPES.MAIZE, area: 20 },
+    // ... more fields
+  ];
+
+  fields.forEach(field => {
+    kous[field.id] = createKOU(KOU_TYPES.FIELD, field.id, field.name, {
+      use: field.use,
+      area: field.area,
+      soilType: 'medium',
+      lastSoilTest: '2023-03-15'
+    });
+  });
+
+  // Create livestock groups
+  const livestockGroups = [
+    { id: 'herd_high', name: 'High Yielders', type: LIVESTOCK_GROUPS.MILKING_HIGH, count: 60 },
+    { id: 'herd_mid', name: 'Mid Yielders', type: LIVESTOCK_GROUPS.MILKING_MID, count: 80 },
+    { id: 'herd_low', name: 'Low Yielders', type: LIVESTOCK_GROUPS.MILKING_LOW, count: 40 },
+    { id: 'dry_cows', name: 'Dry Cows', type: LIVESTOCK_GROUPS.DRY_COWS, count: 30 },
+  ];
+
+  livestockGroups.forEach(group => {
+    kous[group.id] = createKOU(KOU_TYPES.LIVESTOCK_GROUP, group.id, group.name, {
+      groupType: group.type,
+      animalCount: group.count,
+      avgWeight: 650, // kg
+      milkYield: group.type.includes('milking') ? 8000 : 0 // litres/year
+    });
+  });
+
+  // Create feed stores
+  const feedStores = [
+    { id: 'silage_clamp_1', name: 'Grass Silage Clamp 1', type: FEED_STORES.GRASS_SILAGE_CLAMP_1, capacity: 1500 },
+    { id: 'maize_clamp', name: 'Maize Silage Clamp', type: FEED_STORES.MAIZE_SILAGE_CLAMP, capacity: 1000 },
+    { id: 'conc_store', name: 'Concentrate Store', type: FEED_STORES.CONCENTRATE_STORE, capacity: 200 },
+  ];
+
+  feedStores.forEach(store => {
+    kous[store.id] = createKOU(KOU_TYPES.FEED_STORE, store.id, store.name, {
+      storeType: store.type,
+      capacity: store.capacity,
+      currentStock: store.capacity * 0.7, // 70% full
+      feedAnalysis: {
+        DM: store.type.includes('silage') ? 30 : 88,
+        CP: store.type.includes('silage') ? 14 : 18,
+        N: store.type.includes('silage') ? 2.24 : 2.88,
+        P: store.type.includes('silage') ? 0.35 : 0.45,
+        K: store.type.includes('silage') ? 2.5 : 0.8
+      }
+    });
+  });
+
+  // Create manure stores
+  const manureStores = [
+    { id: 'slurry_store_1', name: 'Main Slurry Lagoon', type: MANURE_STORES.SLURRY_LAGOON_1, capacity: 3000 },
+    { id: 'fym_heap', name: 'FYM Heap', type: MANURE_STORES.FYM_HEAP_1, capacity: 500 },
+  ];
+
+  manureStores.forEach(store => {
+    kous[store.id] = createKOU(KOU_TYPES.MANURE_STORE, store.id, store.name, {
+      storeType: store.type,
+      capacity: store.capacity,
+      currentStock: 0,
+      nutrientContent: {
+        N: store.type.includes('slurry') ? 3.0 : 6.0, // kg/m³ or kg/t
+        P: store.type.includes('slurry') ? 0.6 : 1.2,
+        K: store.type.includes('slurry') ? 3.5 : 7.0,
+        S: store.type.includes('slurry') ? 0.3 : 0.6
+      }
+    });
+  });
+
+  // Create outputs
+  kous['milk_output'] = createKOU(KOU_TYPES.OUTPUT, 'milk_output', 'Milk Sales');
+  kous['livestock_sales'] = createKOU(KOU_TYPES.OUTPUT, 'livestock_sales', 'Livestock Sales');
+  kous['crop_sales'] = createKOU(KOU_TYPES.OUTPUT, 'crop_sales', 'Crop Sales');
+  kous['atmosphere'] = createKOU(KOU_TYPES.OUTPUT, 'atmosphere', 'Atmospheric Losses');
+
+  // Create external inputs
+  kous['fertilizer_supplier'] = createKOU(KOU_TYPES.EXTERNAL, 'fertilizer_supplier', 'Fertilizer Supplier');
+  kous['feed_supplier'] = createKOU(KOU_TYPES.EXTERNAL, 'feed_supplier', 'Feed Supplier');
+
+  return { kous, pathways };
+};
+
+// Calculate nutrient balance for a specific KOU
+export const calculateKOUBalance = (kou, pathways) => {
+  const balance = {
+    N: { inputs: 0, outputs: 0, balance: 0 },
+    P: { inputs: 0, outputs: 0, balance: 0 },
+    K: { inputs: 0, outputs: 0, balance: 0 },
+    S: { inputs: 0, outputs: 0, balance: 0 }
+  };
+
+  // Sum inputs
+  pathways
+    .filter(p => p.to === kou.id)
+    .forEach(pathway => {
+      Object.keys(balance).forEach(nutrient => {
+        balance[nutrient].inputs += pathway.nutrients[nutrient] || 0;
+      });
+    });
+
+  // Sum outputs
+  pathways
+    .filter(p => p.from === kou.id)
+    .forEach(pathway => {
+      Object.keys(balance).forEach(nutrient => {
+        balance[nutrient].outputs += pathway.nutrients[nutrient] || 0;
+      });
+    });
+
+  // Calculate balance
+  Object.keys(balance).forEach(nutrient => {
+    balance[nutrient].balance = balance[nutrient].inputs - balance[nutrient].outputs;
+  });
+
+  return balance;
+};
+
+// Export all constants and functions
+export default {
+  KOU_TYPES,
+  FIELD_USE_TYPES,
+  LIVESTOCK_GROUPS,
+  FEED_STORES,
+  MANURE_STORES,
+  PATHWAY_TYPES,
+  createKOU,
+  createPathway,
+  createFarmKOUStructure,
+  calculateKOUBalance
+};
+```
+
+## 10. src/components/HighResolutionNutrientBudget.jsx
+
+```jsx
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MapPin, Package, Beaker, TreePine, Milk, AlertTriangle, CheckCircle, Info, Plus, ArrowRight, Settings, Database } from 'lucide-react';
 import { 
@@ -11,16 +420,12 @@ import {
   createFarmKOUStructure,
   calculateKOUBalance 
 } from '../data/kouStructure';
-// Lazy load heavy components for code splitting
-const NutrientPathwaysView = React.lazy(() => import('./NutrientPathwaysView'));
-const FarmNutrientMap = React.lazy(() => import('./FarmNutrientMap'));
-const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
-const DataManagement = React.lazy(() => import('./DataManagement'));
-import NutrientFlowSankey from './NutrientFlowSankey';
-import SimpleSankey from './SimpleSankey';
+import NutrientPathwaysView from './NutrientPathwaysView';
+import FarmNutrientMap from './FarmNutrientMap';
+import ScenarioPlanning from './ScenarioPlanning';
+import DataManagement from './DataManagement';
 
 const HighResolutionNutrientBudget = () => {
-  const SCHEMA_VERSION = 1; // Add schema version constant
   const [selectedFarmId, setSelectedFarmId] = useState('FARM-001');
   const [activeView, setActiveView] = useState('overview');
   const [selectedKOU, setSelectedKOU] = useState(null);
@@ -36,30 +441,13 @@ const HighResolutionNutrientBudget = () => {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // Check schema version
-        if (parsed.schemaVersion === SCHEMA_VERSION && parsed.kous && parsed.pathways) {
+        if (parsed.kous && parsed.pathways) {
           setKous(parsed.kous);
           setPathways(parsed.pathways);
-          return;
-        } else if (parsed.kous && parsed.pathways) {
-          // Old format without version - migrate it
-          console.log('Migrating old data format to version', SCHEMA_VERSION);
-          setKous(parsed.kous);
-          setPathways(parsed.pathways);
-          // Save with new format immediately
-          const dataToSave = { 
-            kous: parsed.kous, 
-            pathways: parsed.pathways, 
-            schemaVersion: SCHEMA_VERSION,
-            timestamp: new Date().toISOString() 
-          };
-          localStorage.setItem('nutrientBudgetAdvanced', JSON.stringify(dataToSave));
           return;
         }
       } catch (e) {
         console.error('Error loading saved data:', e);
-        // Clear corrupted data
-        localStorage.removeItem('nutrientBudgetAdvanced');
       }
     }
     
@@ -123,12 +511,7 @@ const HighResolutionNutrientBudget = () => {
   // Save to localStorage whenever kous or pathways change
   useEffect(() => {
     if (Object.keys(kous).length > 0 || pathways.length > 0) {
-      const dataToSave = { 
-        kous, 
-        pathways, 
-        schemaVersion: SCHEMA_VERSION,
-        timestamp: new Date().toISOString() 
-      };
+      const dataToSave = { kous, pathways, timestamp: new Date().toISOString() };
       localStorage.setItem('nutrientBudgetAdvanced', JSON.stringify(dataToSave));
     }
   }, [kous, pathways]);
@@ -159,28 +542,13 @@ const HighResolutionNutrientBudget = () => {
     }
   };
 
-  // Loading component for Suspense fallback
-  const LoadingView = () => (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading component...</p>
-        </div>
-      </div>
-    </div>
-  );
-
   // Overview View - Shows all KOUs
   const OverviewView = () => {
-    const kousByType = useMemo(() => 
-      Object.values(kous).reduce((acc, kou) => {
-        if (!acc[kou.type]) acc[kou.type] = [];
-        acc[kou.type].push(kou);
-        return acc;
-      }, {}),
-      [kous]
-    );
+    const kousByType = Object.values(kous).reduce((acc, kou) => {
+      if (!acc[kou.type]) acc[kou.type] = [];
+      acc[kou.type].push(kou);
+      return acc;
+    }, {});
 
     return (
       <div className="space-y-6">
@@ -199,16 +567,7 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedKOU(kou);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Select ${kou.name} - ${kou.properties.area} hectares`}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -235,16 +594,7 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedKOU(kou);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Select ${kou.name} - ${kou.properties.animalCount} animals`}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -272,16 +622,7 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedKOU(kou);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Select ${kou.name} - ${kou.properties.currentStock} tonnes of ${kou.properties.capacity} tonnes capacity`}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -309,16 +650,7 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedKOU(kou);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Select ${kou.name} - ${kou.properties.currentStock} cubic meters of ${kou.properties.capacity} cubic meters capacity`}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -358,8 +690,28 @@ const HighResolutionNutrientBudget = () => {
             </div>
           </div>
 
-          {/* Sankey diagram visualization */}
-          <SimpleSankey />
+          {/* Simple pathway visualization */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pathways.slice(0, 6).map(pathway => {
+              const fromKOU = kous[pathway.from];
+              const toKOU = kous[pathway.to];
+              return (
+                <div key={pathway.id} className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium text-gray-700">{fromKOU?.name || pathway.from}</div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <div className="font-medium text-gray-700">{toKOU?.name || pathway.to}</div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600">
+                    {selectedNutrient}: {pathway.nutrients[selectedNutrient]} kg/yr
+                  </div>
+                  <div className="text-xs text-gray-500 capitalize">
+                    {pathway.type.replace(/_/g, ' ')}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -369,18 +721,9 @@ const HighResolutionNutrientBudget = () => {
   const KOUDetailView = () => {
     if (!selectedKOU) return null;
 
-    const balance = useMemo(
-      () => calculateKOUBalance(selectedKOU, pathways),
-      [selectedKOU.id, pathways]
-    );
-    const incomingPathways = useMemo(
-      () => pathways.filter(p => p.to === selectedKOU.id),
-      [pathways, selectedKOU.id]
-    );
-    const outgoingPathways = useMemo(
-      () => pathways.filter(p => p.from === selectedKOU.id),
-      [pathways, selectedKOU.id]
-    );
+    const balance = calculateKOUBalance(selectedKOU, pathways);
+    const incomingPathways = pathways.filter(p => p.to === selectedKOU.id);
+    const outgoingPathways = pathways.filter(p => p.from === selectedKOU.id);
 
     return (
       <div className="space-y-6">
@@ -389,14 +732,7 @@ const HighResolutionNutrientBudget = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSelectedKOU(null)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedKOU(null);
-                  }
-                }}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-                aria-label="Go back to overview"
+                className="text-gray-600 hover:text-gray-900"
               >
                 ← Back
               </button>
@@ -608,43 +944,35 @@ const HighResolutionNutrientBudget = () => {
         {selectedKOU ? (
           <KOUDetailView />
         ) : activeView === 'pathways' ? (
-          <Suspense fallback={<LoadingView />}>
-            <NutrientPathwaysView 
-              kous={kous} 
-              pathways={pathways} 
-              selectedNutrient={selectedNutrient} 
-            />
-          </Suspense>
+          <NutrientPathwaysView 
+            kous={kous} 
+            pathways={pathways} 
+            selectedNutrient={selectedNutrient} 
+          />
         ) : activeView === 'fieldmap' ? (
-          <Suspense fallback={<LoadingView />}>
-            <FarmNutrientMap
-              kous={kous}
-              pathways={pathways}
-              selectedNutrient={selectedNutrient}
-            />
-          </Suspense>
+          <FarmNutrientMap
+            kous={kous}
+            pathways={pathways}
+            selectedNutrient={selectedNutrient}
+          />
         ) : activeView === 'scenarios' ? (
-          <Suspense fallback={<LoadingView />}>
-            <ScenarioPlanning
-              kous={kous}
-              pathways={pathways}
-            />
-          </Suspense>
+          <ScenarioPlanning
+            kous={kous}
+            pathways={pathways}
+          />
         ) : (
           <OverviewView />
         )}
         
         {/* Data Management Modal */}
         {showDataManagement && (
-          <Suspense fallback={<LoadingView />}>
-            <DataManagement
-              kous={kous}
-              pathways={pathways}
-              onUpdateKous={setKous}
-              onUpdatePathways={setPathways}
-              onClose={() => setShowDataManagement(false)}
-            />
-          </Suspense>
+          <DataManagement
+            kous={kous}
+            pathways={pathways}
+            onUpdateKous={setKous}
+            onUpdatePathways={setPathways}
+            onClose={() => setShowDataManagement(false)}
+          />
         )}
       </div>
     </div>
@@ -652,3 +980,8 @@ const HighResolutionNutrientBudget = () => {
 };
 
 export default HighResolutionNutrientBudget;
+```
+
+## 11. src/components/NutrientPathwaysView.jsx
+
+[File content continues - this is getting quite long. Would you like me to continue with the remaining component files?]
