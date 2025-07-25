@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MapPin, Package, Beaker, TreePine, Milk, AlertTriangle, CheckCircle, Info, Plus, ArrowRight, Settings } from 'lucide-react';
+import { MapPin, Package, Beaker, TreePine, Milk, AlertTriangle, CheckCircle, Info, Plus, ArrowRight, Settings, Database } from 'lucide-react';
 import { 
   KOU_TYPES, 
   FIELD_USE_TYPES, 
@@ -14,6 +14,7 @@ import {
 import NutrientPathwaysView from './NutrientPathwaysView';
 import FarmNutrientMap from './FarmNutrientMap';
 import ScenarioPlanning from './ScenarioPlanning';
+import DataManagement from './DataManagement';
 
 const HighResolutionNutrientBudget = () => {
   const [selectedFarmId, setSelectedFarmId] = useState('FARM-001');
@@ -22,9 +23,26 @@ const HighResolutionNutrientBudget = () => {
   const [kous, setKous] = useState({});
   const [pathways, setPathways] = useState([]);
   const [selectedNutrient, setSelectedNutrient] = useState('N');
+  const [showDataManagement, setShowDataManagement] = useState(false);
 
   // Initialize KOU structure
   useEffect(() => {
+    // Try to load from localStorage first
+    const savedData = localStorage.getItem('nutrientBudgetAdvanced');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.kous && parsed.pathways) {
+          setKous(parsed.kous);
+          setPathways(parsed.pathways);
+          return;
+        }
+      } catch (e) {
+        console.error('Error loading saved data:', e);
+      }
+    }
+    
+    // If no saved data, create default structure
     const { kous: initialKous, pathways: initialPathways } = createFarmKOUStructure({ id: selectedFarmId });
     setKous(initialKous);
     
@@ -80,6 +98,14 @@ const HighResolutionNutrientBudget = () => {
     
     setPathways(examplePathways);
   }, [selectedFarmId]);
+
+  // Save to localStorage whenever kous or pathways change
+  useEffect(() => {
+    if (Object.keys(kous).length > 0 || pathways.length > 0) {
+      const dataToSave = { kous, pathways, timestamp: new Date().toISOString() };
+      localStorage.setItem('nutrientBudgetAdvanced', JSON.stringify(dataToSave));
+    }
+  }, [kous, pathways]);
 
   // Get KOU icon
   const getKOUIcon = (type) => {
@@ -431,6 +457,13 @@ const HighResolutionNutrientBudget = () => {
             </div>
             <div className="flex items-center gap-4">
               <button
+                onClick={() => setShowDataManagement(true)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Database className="w-4 h-4" />
+                Data Management
+              </button>
+              <button
                 onClick={() => setActiveView('overview')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   activeView === 'overview' 
@@ -520,6 +553,17 @@ const HighResolutionNutrientBudget = () => {
           />
         ) : (
           <OverviewView />
+        )}
+        
+        {/* Data Management Modal */}
+        {showDataManagement && (
+          <DataManagement
+            kous={kous}
+            pathways={pathways}
+            onUpdateKous={setKous}
+            onUpdatePathways={setPathways}
+            onClose={() => setShowDataManagement(false)}
+          />
         )}
       </div>
     </div>
