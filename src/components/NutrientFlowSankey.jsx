@@ -32,6 +32,7 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
       const nodes = [];
       const idToIdx = {};
       
+      // First add all KOUs in hierarchical order
       nodeOrder.forEach(type => {
         if (kousByType[type]) {
           kousByType[type].forEach(kou => {
@@ -39,6 +40,25 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
             nodes.push(kou.name);
           });
         }
+      });
+
+      // Then add any special nodes that appear in pathways but aren't KOUs
+      const specialNodes = new Set();
+      pathways.forEach(p => {
+        if (p.from && !idToIdx.hasOwnProperty(p.from)) {
+          specialNodes.add(p.from);
+        }
+        if (p.to && !idToIdx.hasOwnProperty(p.to)) {
+          specialNodes.add(p.to);
+        }
+      });
+
+      // Add special nodes at the end
+      specialNodes.forEach(nodeId => {
+        idToIdx[nodeId] = nodes.length;
+        // Capitalize first letter for display
+        const displayName = nodeId.charAt(0).toUpperCase() + nodeId.slice(1);
+        nodes.push(displayName);
       });
 
       // Create links with cycle detection
@@ -53,21 +73,17 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
           if (sourceIdx !== undefined && targetIdx !== undefined && 
               sourceIdx !== targetIdx) {
             
-            // Only allow forward links (prevent backwards flow in hierarchy)
-            // This prevents cycles by enforcing flow direction
-            if (sourceIdx < targetIdx) {
-              const linkKey = `${sourceIdx}-${targetIdx}`;
-              
-              if (linkMap.has(linkKey)) {
-                // Aggregate values for duplicate links
-                linkMap.get(linkKey).value += p.nutrients[nutrient];
-              } else {
-                linkMap.set(linkKey, {
-                  source: sourceIdx,
-                  target: targetIdx,
-                  value: p.nutrients[nutrient]
-                });
-              }
+            const linkKey = `${sourceIdx}-${targetIdx}`;
+            
+            if (linkMap.has(linkKey)) {
+              // Aggregate values for duplicate links
+              linkMap.get(linkKey).value += p.nutrients[nutrient];
+            } else {
+              linkMap.set(linkKey, {
+                source: sourceIdx,
+                target: targetIdx,
+                value: p.nutrients[nutrient]
+              });
             }
           }
         }
