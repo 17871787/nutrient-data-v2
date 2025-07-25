@@ -11,7 +11,7 @@ import {
   createFarmKOUStructure,
   calculateKOUBalance 
 } from '../data/kouStructure';
-import NutrientSankeyDiagram from './NutrientSankeyDiagram';
+import NutrientFlowDiagram from './NutrientFlowDiagram';
 import FarmNutrientMap from './FarmNutrientMap';
 import ScenarioPlanning from './ScenarioPlanning';
 
@@ -502,7 +502,7 @@ const HighResolutionNutrientBudget = () => {
         {selectedKOU ? (
           <KOUDetailView />
         ) : activeView === 'pathways' ? (
-          <NutrientSankeyDiagram 
+          <NutrientFlowDiagram 
             kous={kous} 
             pathways={pathways} 
             selectedNutrient={selectedNutrient} 
