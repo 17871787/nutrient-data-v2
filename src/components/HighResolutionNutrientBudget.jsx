@@ -17,7 +17,6 @@ const FarmNutrientMap = React.lazy(() => import('./FarmNutrientMap'));
 const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
 const DataManagement = React.lazy(() => import('./DataManagement'));
 import NutrientFlowSankey from './NutrientFlowSankey';
-import SimpleSankey from './SimpleSankey';
 
 const HighResolutionNutrientBudget = () => {
   const SCHEMA_VERSION = 1; // Add schema version constant
@@ -359,7 +358,11 @@ const HighResolutionNutrientBudget = () => {
           </div>
 
           {/* Sankey diagram visualization */}
-          <SimpleSankey />
+          <NutrientFlowSankey
+            kous={kous}
+            pathways={pathways}
+            nutrient={selectedNutrient}
+          />
         </div>
       </div>
     );

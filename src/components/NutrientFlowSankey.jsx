@@ -20,35 +20,61 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
         return { nodes: [], links: [] };
       }
 
-      // Create nodes array with just names (simpler structure)
-      const nodes = Object.values(kous).map((k, index) => k.name);
-      
-      // Create a mapping from KOU id to array index
-      const kouIds = Object.values(kous).map(k => k.id);
-      const idToIdx = Object.fromEntries(kouIds.map((id, i) => [id, i]));
+      // Group KOUs by type to create hierarchical structure
+      const kousByType = {};
+      Object.values(kous).forEach(kou => {
+        if (!kousByType[kou.type]) kousByType[kou.type] = [];
+        kousByType[kou.type].push(kou);
+      });
 
-      // Create links array
+      // Create ordered nodes list - external inputs first, outputs last
+      const nodeOrder = ['external', 'feed_store', 'field', 'livestock_group', 'manure_store', 'output'];
+      const nodes = [];
+      const idToIdx = {};
+      
+      nodeOrder.forEach(type => {
+        if (kousByType[type]) {
+          kousByType[type].forEach(kou => {
+            idToIdx[kou.id] = nodes.length;
+            nodes.push(kou.name);
+          });
+        }
+      });
+
+      // Create links with cycle detection
       const links = [];
+      const linkMap = new Map(); // Track links to aggregate duplicates
       
       pathways.forEach(p => {
-        // Only include pathways with positive nutrient values
         if (p.nutrients?.[nutrient] > 0 && p.from && p.to && p.from !== p.to) {
           const sourceIdx = idToIdx[p.from];
           const targetIdx = idToIdx[p.to];
           
-          // Make sure both indices exist and are valid
           if (sourceIdx !== undefined && targetIdx !== undefined && 
-              sourceIdx >= 0 && targetIdx >= 0 && 
-              sourceIdx < nodes.length && targetIdx < nodes.length &&
               sourceIdx !== targetIdx) {
-            links.push({
-              source: sourceIdx,
-              target: targetIdx,
-              value: p.nutrients[nutrient]
-            });
+            
+            // Only allow forward links (prevent backwards flow in hierarchy)
+            // This prevents cycles by enforcing flow direction
+            if (sourceIdx < targetIdx) {
+              const linkKey = `${sourceIdx}-${targetIdx}`;
+              
+              if (linkMap.has(linkKey)) {
+                // Aggregate values for duplicate links
+                linkMap.get(linkKey).value += p.nutrients[nutrient];
+              } else {
+                linkMap.set(linkKey, {
+                  source: sourceIdx,
+                  target: targetIdx,
+                  value: p.nutrients[nutrient]
+                });
+              }
+            }
           }
         }
       });
+
+      // Convert map to array
+      links.push(...linkMap.values());
 
       console.log('Sankey data processed:', { 
         nodes: nodes.slice(0, 5),
