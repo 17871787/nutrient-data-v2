@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calculator, Save, Copy, Trash2, Plus, TrendingUp, TrendingDown, DollarSign, Leaf, Droplets, Activity, AlertTriangle, Info, ArrowRight, CheckCircle } from 'lucide-react';
+import { validateNutrientValue, NUTRIENT_LIMITS } from '../config/nutrientLimits';
 
 const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
   const [scenarios, setScenarios] = useState({

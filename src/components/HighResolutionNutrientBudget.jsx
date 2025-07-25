@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MapPin, Package, Beaker, TreePine, Milk, AlertTriangle, CheckCircle, Info, Plus, ArrowRight, Settings, Database } from 'lucide-react';
 import { 
@@ -11,10 +11,11 @@ import {
   createFarmKOUStructure,
   calculateKOUBalance 
 } from '../data/kouStructure';
-import NutrientPathwaysView from './NutrientPathwaysView';
-import FarmNutrientMap from './FarmNutrientMap';
-import ScenarioPlanning from './ScenarioPlanning';
-import DataManagement from './DataManagement';
+// Lazy load heavy components for code splitting
+const NutrientPathwaysView = React.lazy(() => import('./NutrientPathwaysView'));
+const FarmNutrientMap = React.lazy(() => import('./FarmNutrientMap'));
+const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
+const DataManagement = React.lazy(() => import('./DataManagement'));
 
 const HighResolutionNutrientBudget = () => {
   const SCHEMA_VERSION = 1; // Add schema version constant
@@ -156,6 +157,18 @@ const HighResolutionNutrientBudget = () => {
     }
   };
 
+  // Loading component for Suspense fallback
+  const LoadingView = () => (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading component...</p>
+        </div>
+      </div>
+    </div>
+  );
+
   // Overview View - Shows all KOUs
   const OverviewView = () => {
     const kousByType = useMemo(() => 
@@ -184,7 +197,16 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedKOU(kou);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Select ${kou.name} - ${kou.properties.area} hectares`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -211,7 +233,16 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedKOU(kou);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Select ${kou.name} - ${kou.properties.animalCount} animals`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -239,7 +270,16 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedKOU(kou);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Select ${kou.name} - ${kou.properties.currentStock} tonnes of ${kou.properties.capacity} tonnes capacity`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -267,7 +307,16 @@ const HighResolutionNutrientBudget = () => {
                   <div
                     key={kou.id}
                     onClick={() => setSelectedKOU(kou)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${getKOUColor(kou.type)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedKOU(kou);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Select ${kou.name} - ${kou.properties.currentStock} cubic meters of ${kou.properties.capacity} cubic meters capacity`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${getKOUColor(kou.type)}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -358,7 +407,14 @@ const HighResolutionNutrientBudget = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSelectedKOU(null)}
-                className="text-gray-600 hover:text-gray-900"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedKOU(null);
+                  }
+                }}
+                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+                aria-label="Go back to overview"
               >
                 ← Back
               </button>
@@ -570,35 +626,43 @@ const HighResolutionNutrientBudget = () => {
         {selectedKOU ? (
           <KOUDetailView />
         ) : activeView === 'pathways' ? (
-          <NutrientPathwaysView 
-            kous={kous} 
-            pathways={pathways} 
-            selectedNutrient={selectedNutrient} 
-          />
+          <Suspense fallback={<LoadingView />}>
+            <NutrientPathwaysView 
+              kous={kous} 
+              pathways={pathways} 
+              selectedNutrient={selectedNutrient} 
+            />
+          </Suspense>
         ) : activeView === 'fieldmap' ? (
-          <FarmNutrientMap
-            kous={kous}
-            pathways={pathways}
-            selectedNutrient={selectedNutrient}
-          />
+          <Suspense fallback={<LoadingView />}>
+            <FarmNutrientMap
+              kous={kous}
+              pathways={pathways}
+              selectedNutrient={selectedNutrient}
+            />
+          </Suspense>
         ) : activeView === 'scenarios' ? (
-          <ScenarioPlanning
-            kous={kous}
-            pathways={pathways}
-          />
+          <Suspense fallback={<LoadingView />}>
+            <ScenarioPlanning
+              kous={kous}
+              pathways={pathways}
+            />
+          </Suspense>
         ) : (
           <OverviewView />
         )}
         
         {/* Data Management Modal */}
         {showDataManagement && (
-          <DataManagement
-            kous={kous}
-            pathways={pathways}
-            onUpdateKous={setKous}
-            onUpdatePathways={setPathways}
-            onClose={() => setShowDataManagement(false)}
-          />
+          <Suspense fallback={<LoadingView />}>
+            <DataManagement
+              kous={kous}
+              pathways={pathways}
+              onUpdateKous={setKous}
+              onUpdatePathways={setPathways}
+              onClose={() => setShowDataManagement(false)}
+            />
+          </Suspense>
         )}
       </div>
     </div>

@@ -68,9 +68,18 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
           height: '100px'
         }}
         onClick={() => setSelectedField(field)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setSelectedField(field);
+          }
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label={`Field ${field.name}, ${field.properties.area} hectares, ${field.status} nutrient status with ${field.balancePerHa.toFixed(0)} kg per hectare`}
       >
         <div
-          className={`w-full h-full rounded-lg border-2 cursor-pointer shadow-md ${
+          className={`w-full h-full rounded-lg border-2 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             isSelected ? 'border-gray-800 shadow-xl' : 'border-gray-400'
           }`}
           style={{ backgroundColor: field.statusColor }}
