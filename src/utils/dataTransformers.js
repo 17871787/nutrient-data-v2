@@ -8,21 +8,21 @@ export function transformToKOUs(simpleData) {
   
   // Create farm KOU
   const farmId = `farm_${farmInfo.name.toLowerCase().replace(/\s+/g, '_')}`;
-  kous[farmId] = createKOU(farmId, `${farmInfo.name} Farm`, KOU_TYPES.FIELD, {
+  kous[farmId] = createKOU(KOU_TYPES.FIELD, farmId, `${farmInfo.name} Farm`, {
     area: farmInfo.totalArea,
     use: 'mixed_farming',
   });
   
   // Create main field KOU (aggregate)
   const mainFieldId = 'field_main';
-  kous[mainFieldId] = createKOU(mainFieldId, 'Main Fields', KOU_TYPES.FIELD, {
+  kous[mainFieldId] = createKOU(KOU_TYPES.FIELD, mainFieldId, 'Main Fields', {
     area: farmInfo.totalArea,
     use: 'mixed_cropping',
   });
   
   // Create livestock group
   const livestockId = 'herd_main';
-  kous[livestockId] = createKOU(livestockId, 'Dairy Herd', KOU_TYPES.LIVESTOCK_GROUP, {
+  kous[livestockId] = createKOU(KOU_TYPES.LIVESTOCK_GROUP, livestockId, 'Dairy Herd', {
     animalCount: farmInfo.milkingCows,
     milkYield: 8000, // Assume average yield
     group: 'milking_cows',
@@ -30,14 +30,14 @@ export function transformToKOUs(simpleData) {
   
   // Create feed store
   const feedStoreId = 'feed_store_main';
-  kous[feedStoreId] = createKOU(feedStoreId, 'Feed Store', KOU_TYPES.FEED_STORE, {
+  kous[feedStoreId] = createKOU(KOU_TYPES.FEED_STORE, feedStoreId, 'Feed Store', {
     capacity: 500, // Estimate based on cow numbers
     currentStock: 250,
   });
   
   // Create manure store
   const slurryStoreId = 'slurry_store_main';
-  kous[slurryStoreId] = createKOU(slurryStoreId, 'Slurry Store', KOU_TYPES.MANURE_STORE, {
+  kous[slurryStoreId] = createKOU(KOU_TYPES.MANURE_STORE, slurryStoreId, 'Slurry Store', {
     capacity: 5000, // Estimate
     currentStock: manure.slurryApplied || 0,
     nutrientContent: { N: manure.slurryNContent || 2.5, P: manure.slurryPContent || 0.5 },
@@ -45,17 +45,17 @@ export function transformToKOUs(simpleData) {
   
   // Create external suppliers
   const feedSupplierId = 'feed_supplier';
-  kous[feedSupplierId] = createKOU(feedSupplierId, 'Feed Supplier', KOU_TYPES.EXTERNAL, {});
+  kous[feedSupplierId] = createKOU(KOU_TYPES.EXTERNAL, feedSupplierId, 'Feed Supplier', {});
   
   const fertilizerSupplierId = 'fertilizer_supplier';
-  kous[fertilizerSupplierId] = createKOU(fertilizerSupplierId, 'Fertilizer Supplier', KOU_TYPES.EXTERNAL, {});
+  kous[fertilizerSupplierId] = createKOU(KOU_TYPES.EXTERNAL, fertilizerSupplierId, 'Fertilizer Supplier', {});
   
   // Create outputs
   const milkOutputId = 'milk_output';
-  kous[milkOutputId] = createKOU(milkOutputId, 'Milk Sales', KOU_TYPES.OUTPUT, {});
+  kous[milkOutputId] = createKOU(KOU_TYPES.OUTPUT, milkOutputId, 'Milk Sales', {});
   
   const livestockSalesId = 'livestock_sales';
-  kous[livestockSalesId] = createKOU(livestockSalesId, 'Livestock Sales', KOU_TYPES.OUTPUT, {});
+  kous[livestockSalesId] = createKOU(KOU_TYPES.OUTPUT, livestockSalesId, 'Livestock Sales', {});
   
   // Transform inputs to pathways
   inputs.forEach((input, index) => {
