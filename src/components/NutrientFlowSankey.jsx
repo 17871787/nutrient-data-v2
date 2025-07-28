@@ -23,88 +23,65 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
     try {
       // Safety check
       if (!kous || Object.keys(kous).length === 0 || !pathways || pathways.length === 0) {
-        return { nodes: [], links: [] };
+        return { nodes: [], links: [], maxValue: 1 };
       }
 
-      // Group KOUs by type to create hierarchical structure
-      const kousByType = {};
-      Object.values(kous).forEach(kou => {
-        if (!kousByType[kou.type]) kousByType[kou.type] = [];
-        kousByType[kou.type].push(kou);
+      // Aggregate totals per node for selected nutrient
+      const nodeTotals = {};
+      pathways.forEach(p => {
+        const v = p.nutrients?.[nutrient] ?? 0;
+        if (v <= 0) return;
+        nodeTotals[p.from] = (nodeTotals[p.from] || 0) + v;
+        nodeTotals[p.to] = (nodeTotals[p.to] || 0) + v;
       });
 
-      // Create ordered nodes list - external inputs first, outputs last
-      const nodeOrder = ['external', 'feed_store', 'field', 'livestock_group', 'manure_store', 'output'];
-      const nodes = [];
-      const idToIdx = {};
-      
-      // First add all KOUs in hierarchical order
-      nodeOrder.forEach(type => {
-        if (kousByType[type]) {
-          kousByType[type].forEach(kou => {
-            idToIdx[kou.id] = nodes.length;
-            nodes.push(kou.name);
-          });
-        }
-      });
+      // Keep only nodes with real flow
+      const activeNodes = Object.values(kous)
+        .filter(k => nodeTotals[k.id] > 0)
+        .map(k => ({ ...k, colour: nodeColours[k.type] ?? '#9ca3af' }));
 
-      // Then add any special nodes that appear in pathways but aren't KOUs
+      // Add special nodes (like atmosphere) that aren't in KOUs but have flow
       const specialNodes = new Set();
       pathways.forEach(p => {
-        if (p.from && !idToIdx.hasOwnProperty(p.from)) {
-          specialNodes.add(p.from);
-        }
-        if (p.to && !idToIdx.hasOwnProperty(p.to)) {
-          specialNodes.add(p.to);
-        }
-      });
-
-      // Add special nodes at the end
-      specialNodes.forEach(nodeId => {
-        idToIdx[nodeId] = nodes.length;
-        // Capitalize first letter for display
-        const displayName = nodeId.charAt(0).toUpperCase() + nodeId.slice(1);
-        nodes.push(displayName);
-      });
-
-      // Create links with cycle detection
-      const links = [];
-      const linkMap = new Map(); // Track links to aggregate duplicates
-      
-      pathways.forEach(p => {
-        if (p.nutrients?.[nutrient] > 0 && p.from && p.to && p.from !== p.to) {
-          const sourceIdx = idToIdx[p.from];
-          const targetIdx = idToIdx[p.to];
-          
-          if (sourceIdx !== undefined && targetIdx !== undefined && 
-              sourceIdx !== targetIdx) {
-            
-            const linkKey = `${sourceIdx}-${targetIdx}`;
-            
-            if (linkMap.has(linkKey)) {
-              // Aggregate values for duplicate links
-              linkMap.get(linkKey).value += p.nutrients[nutrient];
-            } else {
-              linkMap.set(linkKey, {
-                source: sourceIdx,
-                target: targetIdx,
-                value: p.nutrients[nutrient]
-              });
-            }
+        if ((p.nutrients?.[nutrient] ?? 0) > 0) {
+          if (p.from && !kous[p.from] && nodeTotals[p.from] > 0) {
+            specialNodes.add(p.from);
+          }
+          if (p.to && !kous[p.to] && nodeTotals[p.to] > 0) {
+            specialNodes.add(p.to);
           }
         }
       });
 
-      // Convert map to array
-      links.push(...linkMap.values());
-      
-      // Calculate max flow value for dynamic opacity
-      const maxDy = Math.max(...links.map(l => l.value), 1);
-      
-      return { nodes, links, maxDy };
+      specialNodes.forEach(nodeId => {
+        const displayName = nodeId.charAt(0).toUpperCase() + nodeId.slice(1);
+        activeNodes.push({
+          id: nodeId,
+          name: displayName,
+          type: 'external',
+          colour: nodeColours.external
+        });
+      });
+
+      // Create index mapping
+      const idToIdx = Object.fromEntries(activeNodes.map((n, i) => [n.id, i]));
+
+      // Create links only for active nodes
+      const links = pathways
+        .filter(p => (p.nutrients?.[nutrient] ?? 0) > 0)
+        .map(p => ({
+          source: idToIdx[p.from],
+          target: idToIdx[p.to],
+          value: p.nutrients[nutrient],
+        }))
+        .filter(l => l.source >= 0 && l.target >= 0);
+
+      const maxValue = Math.max(...links.map(l => l.value), 1);
+
+      return { nodes: activeNodes, links, maxValue };
     } catch (error) {
       console.error('Error processing Sankey data:', error);
-      return { nodes: [], links: [] };
+      return { nodes: [], links: [], maxValue: 1 };
     }
   }, [kous, pathways, nutrient]);
 
@@ -121,26 +98,24 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
       .filter(l => l.source === index || l.target === index)
       .reduce((s, l) => s + l.value, 0);
 
-    // Decide label side: if node starts in the rightmost 25% of canvas, right-align
-    const onRight = x > sankeyWidth * 0.75;
+    // Better right-side detection using center point
+    const centerX = x + width / 2;
+    const onRight = centerX > sankeyWidth * 0.66;
 
     // Helper to trim only when needed
     const trim = (str, max) => (str.length > max ? str.slice(0, max - 1) + '…' : str);
-    const name = trim(node, onRight ? 22 : 18);
+    const nodeName = node.name || node;
+    const name = trim(nodeName, onRight ? 22 : 18);
 
-    // Coordinates for name & value
-    const nameX = onRight ? x + width - 6 : x + 6;
+    // If bar is narrow (<6px) shift label outside for clarity
+    const nameX = width < 6 
+      ? (onRight ? x - 12 : x + width + 12)
+      : (onRight ? x + width - 6 : x + 6);
     const anchor = onRight ? 'end' : 'start';
     const valueX = x + width / 2;
 
-    // Try to determine node type from name
-    let nodeColor = '#3b82f6'; // default blue
-    if (node.toLowerCase().includes('field')) nodeColor = nodeColours.field;
-    else if (node.toLowerCase().includes('herd') || node.toLowerCase().includes('livestock')) nodeColor = nodeColours.livestock_group;
-    else if (node.toLowerCase().includes('feed') || node.toLowerCase().includes('silage') || node.toLowerCase().includes('conc')) nodeColor = nodeColours.feed_store;
-    else if (node.toLowerCase().includes('slurry') || node.toLowerCase().includes('manure') || node.toLowerCase().includes('fym')) nodeColor = nodeColours.manure_store;
-    else if (node.toLowerCase().includes('milk') || node.toLowerCase().includes('sales')) nodeColor = nodeColours.output;
-    else if (node.toLowerCase().includes('supplier') || node.toLowerCase().includes('external')) nodeColor = nodeColours.external;
+    // Use node's colour property if available
+    const nodeColor = node.colour || nodeColours.external;
 
     return (
       <Layer key={`CustomNode${index}`}>
@@ -154,12 +129,13 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
           stroke="#374151"
         />
 
-        {/* node name – sits beside the bar, never off-canvas */}
+        {/* node name – positioned to avoid overlap */}
         <text
           x={nameX}
-          y={y - 8}
+          y={y + height / 2}
           textAnchor={anchor}
-          fontSize="16"
+          alignmentBaseline="middle"
+          fontSize="14"
           fontWeight="600"
           fill="#374151"
           style={{ textShadow: '0 0 3px #fff' }}
@@ -167,8 +143,8 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
           {name}
         </text>
 
-        {/* total kg value – only if > 0 */}
-        {totalKg >= 1 && (
+        {/* total kg value – only if > 0 and bar is wide enough */}
+        {totalKg >= 1 && width >= 20 && (
           <text
             x={valueX}
             y={y + height / 2}
@@ -182,14 +158,14 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
           </text>
         )}
 
-        <title>{`${node}\nTotal ${nutrient}: ${Math.round(totalKg).toLocaleString()} kg`}</title>
+        <title>{`${nodeName}\nTotal ${nutrient}: ${Math.round(totalKg).toLocaleString()} kg`}</title>
       </Layer>
     );
   };
 
   // Custom link component without value labels to prevent overlap
   const CustomLink = (props) => {
-    const opacity = 0.3 + 0.7 * (props.payload.value / data.maxDy);
+    const opacity = 0.3 + 0.7 * (props.payload.value / data.maxValue);
     
     return (
       <path
