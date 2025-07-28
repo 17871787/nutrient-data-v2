@@ -11,13 +11,28 @@ export const simpleEntrySchema = z.object({
       .int('Number of cows must be a whole number')
       .nonnegative('Number of cows cannot be negative')
       .max(5000, 'Number of cows seems too large'),
+    youngstock0_12: z.number()
+      .int('Number must be a whole number')
+      .nonnegative('Cannot be negative')
+      .max(2000, 'Number seems too large')
+      .default(0),
+    youngstock12_calving: z.number()
+      .int('Number must be a whole number')
+      .nonnegative('Cannot be negative')
+      .max(2000, 'Number seems too large')
+      .default(0),
+    milkCPpct: z.number()
+      .min(2, 'Milk CP% must be at least 2%')
+      .max(5, 'Milk CP% seems too high')
+      .default(3.2),
   }),
   
   inputs: z.array(z.object({
     source: z.enum(['concentrate', 'silage', 'hay', 'straw', 'fertiliser_N', 'fertiliser_P', 'fertiliser_compound']),
     label: z.string(),
     amount: z.number().nonnegative('Amount cannot be negative'),
-    nContent: z.number().min(0).max(100, 'N content must be between 0-100%'),
+    cpContent: z.number().min(0).max(50, 'CP content must be between 0-50%').optional(),
+    nContent: z.number().min(0).max(100, 'N content must be between 0-100%').optional(),
     pContent: z.number().min(0).max(100, 'P content must be between 0-100%'),
     kContent: z.number().min(0).max(100, 'K content must be between 0-100%').optional(),
     sContent: z.number().min(0).max(100, 'S content must be between 0-100%').optional(),
@@ -41,18 +56,42 @@ export const simpleEntrySchema = z.object({
     slurryPContent: z.number()
       .min(0)
       .max(5, 'P content must be between 0-5 kg/m³'),
+    slurryImported: z.number()
+      .nonnegative('Import volume cannot be negative')
+      .max(10000, 'Import volume seems too large')
+      .default(0),
+    slurryImportedNContent: z.number()
+      .min(0)
+      .max(10, 'N content must be between 0-10 kg/m³')
+      .default(2.5),
+    slurryImportedPContent: z.number()
+      .min(0)
+      .max(5, 'P content must be between 0-5 kg/m³')
+      .default(0.5),
+    slurryExported: z.number()
+      .nonnegative('Export volume cannot be negative')
+      .max(10000, 'Export volume seems too large')
+      .default(0),
+    slurryExportedNContent: z.number()
+      .min(0)
+      .max(10, 'N content must be between 0-10 kg/m³')
+      .default(2.5),
+    slurryExportedPContent: z.number()
+      .min(0)
+      .max(5, 'P content must be between 0-5 kg/m³')
+      .default(0.5),
   }),
 });
 
 // Default values for common feeds and fertilizers
 export const DEFAULT_NUTRIENT_CONTENTS = {
-  concentrate: { n: 2.5, p: 0.5, k: 0.5, s: 0.2 },
-  silage: { n: 0.35, p: 0.06, k: 0.35, s: 0.03 },
-  hay: { n: 1.8, p: 0.25, k: 2.0, s: 0.15 },
-  straw: { n: 0.5, p: 0.08, k: 1.2, s: 0.08 },
-  fertiliser_N: { n: 27.0, p: 0, k: 0, s: 0 },
-  fertiliser_P: { n: 0, p: 20.0, k: 0, s: 0 },
-  fertiliser_compound: { n: 20.0, p: 10.0, k: 10.0, s: 2.0 },
+  concentrate: { cp: 18.0, n: 2.88, p: 0.5, k: 0.5, s: 0.2 },
+  silage: { cp: 14.0, n: 2.24, p: 0.06, k: 0.35, s: 0.03 },
+  hay: { cp: 11.0, n: 1.76, p: 0.25, k: 2.0, s: 0.15 },
+  straw: { cp: 3.5, n: 0.56, p: 0.08, k: 1.2, s: 0.08 },
+  fertiliser_N: { cp: 0, n: 27.0, p: 0, k: 0, s: 0 },
+  fertiliser_P: { cp: 0, n: 0, p: 20.0, k: 0, s: 0 },
+  fertiliser_compound: { cp: 0, n: 20.0, p: 10.0, k: 10.0, s: 2.0 },
 };
 
 // Default form values with realistic test data
@@ -61,12 +100,16 @@ export const DEFAULT_FORM_VALUES = {
     name: 'Demo Farm',
     totalArea: 120,
     milkingCows: 180,
+    youngstock0_12: 45,
+    youngstock12_calving: 60,
+    milkCPpct: 3.2,
   },
   inputs: [
     { 
       source: 'concentrate', 
       label: 'Dairy Concentrates', 
       amount: 350, 
+      cpContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.cp,
       nContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.n,
       pContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.p,
       kContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.k,
@@ -76,6 +119,7 @@ export const DEFAULT_FORM_VALUES = {
       source: 'silage', 
       label: 'Grass Silage', 
       amount: 2800, 
+      cpContent: DEFAULT_NUTRIENT_CONTENTS.silage.cp,
       nContent: DEFAULT_NUTRIENT_CONTENTS.silage.n,
       pContent: DEFAULT_NUTRIENT_CONTENTS.silage.p,
       kContent: DEFAULT_NUTRIENT_CONTENTS.silage.k,
@@ -99,5 +143,11 @@ export const DEFAULT_FORM_VALUES = {
     slurryApplied: 4200,
     slurryNContent: 2.5,
     slurryPContent: 0.5,
+    slurryImported: 0,
+    slurryImportedNContent: 2.5,
+    slurryImportedPContent: 0.5,
+    slurryExported: 0,
+    slurryExportedNContent: 2.5,
+    slurryExportedPContent: 0.5,
   },
 };

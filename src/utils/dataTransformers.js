@@ -20,13 +20,32 @@ export function transformToKOUs(simpleData) {
     use: 'mixed_cropping',
   });
   
-  // Create livestock group
+  // Create livestock groups
   const livestockId = 'herd_main';
   kous[livestockId] = createKOU(KOU_TYPES.LIVESTOCK_GROUP, livestockId, 'Dairy Herd', {
     animalCount: farmInfo.milkingCows,
     milkYield: 8000, // Assume average yield
     group: 'milking_cows',
   });
+  
+  // Create youngstock groups if they exist
+  if (farmInfo.youngstock0_12 > 0) {
+    const youngstock1Id = 'herd_youngstock_0_12';
+    kous[youngstock1Id] = createKOU(KOU_TYPES.LIVESTOCK_GROUP, youngstock1Id, 'Youngstock 0-12m', {
+      animalCount: farmInfo.youngstock0_12,
+      milkYield: 0,
+      group: 'youngstock',
+    });
+  }
+  
+  if (farmInfo.youngstock12_calving > 0) {
+    const youngstock2Id = 'herd_youngstock_12_calving';
+    kous[youngstock2Id] = createKOU(KOU_TYPES.LIVESTOCK_GROUP, youngstock2Id, 'Youngstock 12m-calving', {
+      animalCount: farmInfo.youngstock12_calving,
+      milkYield: 0,
+      group: 'youngstock',
+    });
+  }
   
   // Create feed store
   const feedStoreId = 'feed_store_main';
@@ -63,8 +82,14 @@ export function transformToKOUs(simpleData) {
       const amount = input.amount;
       const multiplier = input.source?.includes('fertiliser') ? 1 : 1000; // kg for fertilizer, tonnes to kg for feed
       
+      // For feeds, convert CP to N if needed
+      let nContent = input.nContent || 0;
+      if (input.cpContent && !input.source?.includes('fertiliser')) {
+        nContent = (input.cpContent || 0) / 6.25;
+      }
+      
       const nutrients = {
-        N: (amount * multiplier * (input.nContent || 0)) / 100,
+        N: (amount * multiplier * nContent) / 100,
         P: (amount * multiplier * (input.pContent || 0)) / 100,
         K: (amount * multiplier * (input.kContent || 0)) / 100,
         S: (amount * multiplier * (input.sContent || 0)) / 100,
@@ -109,12 +134,24 @@ export function transformToKOUs(simpleData) {
       const amount = output.amount;
       const multiplier = output.type === 'milk' ? 1000 : 1; // tonnes to kg for milk
       
-      const nutrients = {
-        N: (amount * multiplier * (output.nContent || 0)) / 100,
-        P: (amount * multiplier * (output.pContent || 0)) / 100,
-        K: 0,
-        S: 0,
-      };
+      let nutrients;
+      if (output.type === 'milk') {
+        // Calculate milk N from CP% and fixed P
+        const milkCPpct = farmInfo.milkCPpct || 3.2;
+        nutrients = {
+          N: amount * 1000 * (milkCPpct / 100) * 0.16, // CP to N conversion
+          P: amount * 1000 * 0.0009, // 0.9 g/L
+          K: 0,
+          S: 0,
+        };
+      } else {
+        nutrients = {
+          N: (amount * multiplier * (output.nContent || 0)) / 100,
+          P: (amount * multiplier * (output.pContent || 0)) / 100,
+          K: 0,
+          S: 0,
+        };
+      }
       
       const targetId = output.type === 'milk' ? milkOutputId : livestockSalesId;
       pathways.push(
@@ -171,6 +208,50 @@ export function transformToKOUs(simpleData) {
         'atmosphere',
         PATHWAY_TYPES.ATMOSPHERIC_LOSS,
         { N: totalFieldN * 0.1, P: 0, K: 0, S: totalFieldN * 0.01 }
+      )
+    );
+  }
+  
+  // Handle slurry imports
+  if (manure.slurryImported > 0) {
+    const importSupplierId = 'slurry_importer';
+    kous[importSupplierId] = createKOU(KOU_TYPES.EXTERNAL, importSupplierId, 'Slurry Import', {});
+    
+    const importNutrients = {
+      N: manure.slurryImported * (manure.slurryImportedNContent || 2.5),
+      P: manure.slurryImported * (manure.slurryImportedPContent || 0.5),
+      K: manure.slurryImported * 3,
+      S: manure.slurryImported * 0.3,
+    };
+    
+    pathways.push(
+      createPathway(
+        importSupplierId,
+        slurryStoreId,
+        PATHWAY_TYPES.PURCHASE,
+        importNutrients
+      )
+    );
+  }
+  
+  // Handle slurry exports
+  if (manure.slurryExported > 0) {
+    const exportCustomerId = 'slurry_export';
+    kous[exportCustomerId] = createKOU(KOU_TYPES.OUTPUT, exportCustomerId, 'Slurry Export', {});
+    
+    const exportNutrients = {
+      N: manure.slurryExported * (manure.slurryExportedNContent || 2.5),
+      P: manure.slurryExported * (manure.slurryExportedPContent || 0.5),
+      K: manure.slurryExported * 3,
+      S: manure.slurryExported * 0.3,
+    };
+    
+    pathways.push(
+      createPathway(
+        slurryStoreId,
+        exportCustomerId,
+        PATHWAY_TYPES.SALE,
+        exportNutrients
       )
     );
   }

@@ -111,7 +111,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
 
   // Add new input row
   const addInputRow = (type) => {
-    const defaults = DEFAULT_NUTRIENT_CONTENTS[type] || { n: 0, p: 0, k: 0, s: 0 };
+    const defaults = DEFAULT_NUTRIENT_CONTENTS[type] || { cp: 0, n: 0, p: 0, k: 0, s: 0 };
     const labels = {
       concentrate: 'Concentrates',
       silage: 'Silage',
@@ -126,6 +126,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
       source: type,
       label: labels[type] || type,
       amount: 0,
+      cpContent: defaults.cp,
       nContent: defaults.n,
       pContent: defaults.p,
       kContent: defaults.k,
@@ -206,6 +207,30 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
               required
               helpText="Number of milking cows in the herd"
             />
+            <InputRow
+              label="Youngstock (0-12 months)"
+              unit="head"
+              register={register}
+              field="farmInfo.youngstock0_12"
+              errors={errors}
+              helpText="Calves and youngstock up to 12 months old"
+            />
+            <InputRow
+              label="Youngstock (12m to calving)"
+              unit="head"
+              register={register}
+              field="farmInfo.youngstock12_calving"
+              errors={errors}
+              helpText="Heifers from 12 months to first calving"
+            />
+            <InputRow
+              label="Average Milk Protein"
+              unit="%"
+              register={register}
+              field="farmInfo.milkCPpct"
+              errors={errors}
+              helpText="Used to calculate milk nitrogen output (CP ÷ 6.25)"
+            />
           </div>
         );
 
@@ -237,30 +262,62 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                   />
                   
                   <div className="flex gap-4 mt-3">
-                    <InlineInputRow
-                      label="N %"
-                      register={register}
-                      field={`inputs.${index}.nContent`}
-                      errors={errors}
-                    />
-                    <InlineInputRow
-                      label="P %"
-                      register={register}
-                      field={`inputs.${index}.pContent`}
-                      errors={errors}
-                    />
-                    <InlineInputRow
-                      label="K %"
-                      register={register}
-                      field={`inputs.${index}.kContent`}
-                      errors={errors}
-                    />
-                    <InlineInputRow
-                      label="S %"
-                      register={register}
-                      field={`inputs.${index}.sContent`}
-                      errors={errors}
-                    />
+                    {field.source.includes('fertiliser') ? (
+                      <>
+                        <InlineInputRow
+                          label="N %"
+                          register={register}
+                          field={`inputs.${index}.nContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="P %"
+                          register={register}
+                          field={`inputs.${index}.pContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="K %"
+                          register={register}
+                          field={`inputs.${index}.kContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="S %"
+                          register={register}
+                          field={`inputs.${index}.sContent`}
+                          errors={errors}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <InlineInputRow
+                          label="CP % DM"
+                          register={register}
+                          field={`inputs.${index}.cpContent`}
+                          errors={errors}
+                          helpText="Crude Protein %"
+                        />
+                        <InlineInputRow
+                          label="P %"
+                          register={register}
+                          field={`inputs.${index}.pContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="K %"
+                          register={register}
+                          field={`inputs.${index}.kContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="S %"
+                          register={register}
+                          field={`inputs.${index}.sContent`}
+                          errors={errors}
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -366,6 +423,80 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     unit="kg/m³"
                     register={register}
                     field="manure.slurryPContent"
+                    errors={errors}
+                    helpText="Typical: 0.4-0.6 kg/m³"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Slurry Imports */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-700 mb-3">Slurry Imports</h3>
+              
+              <InputRow
+                label="Imported Slurry Volume"
+                unit="m³/yr"
+                register={register}
+                field="manure.slurryImported"
+                errors={errors}
+                helpText="Volume of slurry brought onto the farm"
+              />
+              
+              <div className="flex gap-4 mt-4">
+                <div className="flex-1">
+                  <InputRow
+                    label="N Content"
+                    unit="kg/m³"
+                    register={register}
+                    field="manure.slurryImportedNContent"
+                    errors={errors}
+                    helpText="Typical: 2-3 kg/m³"
+                  />
+                </div>
+                <div className="flex-1">
+                  <InputRow
+                    label="P Content"
+                    unit="kg/m³"
+                    register={register}
+                    field="manure.slurryImportedPContent"
+                    errors={errors}
+                    helpText="Typical: 0.4-0.6 kg/m³"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Slurry Exports */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-700 mb-3">Slurry Exports</h3>
+              
+              <InputRow
+                label="Exported Slurry Volume"
+                unit="m³/yr"
+                register={register}
+                field="manure.slurryExported"
+                errors={errors}
+                helpText="Volume of slurry removed from the farm"
+              />
+              
+              <div className="flex gap-4 mt-4">
+                <div className="flex-1">
+                  <InputRow
+                    label="N Content"
+                    unit="kg/m³"
+                    register={register}
+                    field="manure.slurryExportedNContent"
+                    errors={errors}
+                    helpText="Typical: 2-3 kg/m³"
+                  />
+                </div>
+                <div className="flex-1">
+                  <InputRow
+                    label="P Content"
+                    unit="kg/m³"
+                    register={register}
+                    field="manure.slurryExportedPContent"
                     errors={errors}
                     helpText="Typical: 0.4-0.6 kg/m³"
                   />
