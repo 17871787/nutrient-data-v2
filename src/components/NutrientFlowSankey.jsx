@@ -108,61 +108,81 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutri
     }
   }, [kous, pathways, nutrient]);
 
-  // Custom node component with labels
-  const CustomNode = ({ x, y, width, height, index, payload }) => {
-    const isOut = x > width / 2;
-    
-    // Try to determine node type from name or position
-    const nodeName = payload.name || data.nodes[index];
-    let nodeColor = '#3b82f6'; // default blue
-    
-    if (nodeName.toLowerCase().includes('field')) nodeColor = nodeColours.field;
-    else if (nodeName.toLowerCase().includes('herd') || nodeName.toLowerCase().includes('livestock')) nodeColor = nodeColours.livestock_group;
-    else if (nodeName.toLowerCase().includes('feed') || nodeName.toLowerCase().includes('silage') || nodeName.toLowerCase().includes('conc')) nodeColor = nodeColours.feed_store;
-    else if (nodeName.toLowerCase().includes('slurry') || nodeName.toLowerCase().includes('manure') || nodeName.toLowerCase().includes('fym')) nodeColor = nodeColours.manure_store;
-    else if (nodeName.toLowerCase().includes('milk') || nodeName.toLowerCase().includes('sales')) nodeColor = nodeColours.output;
-    else if (nodeName.toLowerCase().includes('supplier') || nodeName.toLowerCase().includes('external')) nodeColor = nodeColours.external;
-    
-    // Calculate total nutrient flow through this node
+  // Define sankey width for label positioning
+  const sankeyWidth = 900;
+
+  // Custom node component with smart label alignment
+  const CustomNode = ({ x, y, width, height, index }) => {
+    const node = data.nodes[index];
+    if (!node) return null;
+
+    // Total flow through this node
     const totalKg = data.links
       .filter(l => l.source === index || l.target === index)
       .reduce((s, l) => s + l.value, 0);
-    
+
+    // Decide label side: if node starts in the rightmost 25% of canvas, right-align
+    const onRight = x > sankeyWidth * 0.75;
+
+    // Helper to trim only when needed
+    const trim = (str, max) => (str.length > max ? str.slice(0, max - 1) + '…' : str);
+    const name = trim(node, onRight ? 22 : 18);
+
+    // Coordinates for name & value
+    const nameX = onRight ? x + width - 6 : x + 6;
+    const anchor = onRight ? 'end' : 'start';
+    const valueX = x + width / 2;
+
+    // Try to determine node type from name
+    let nodeColor = '#3b82f6'; // default blue
+    if (node.toLowerCase().includes('field')) nodeColor = nodeColours.field;
+    else if (node.toLowerCase().includes('herd') || node.toLowerCase().includes('livestock')) nodeColor = nodeColours.livestock_group;
+    else if (node.toLowerCase().includes('feed') || node.toLowerCase().includes('silage') || node.toLowerCase().includes('conc')) nodeColor = nodeColours.feed_store;
+    else if (node.toLowerCase().includes('slurry') || node.toLowerCase().includes('manure') || node.toLowerCase().includes('fym')) nodeColor = nodeColours.manure_store;
+    else if (node.toLowerCase().includes('milk') || node.toLowerCase().includes('sales')) nodeColor = nodeColours.output;
+    else if (node.toLowerCase().includes('supplier') || node.toLowerCase().includes('external')) nodeColor = nodeColours.external;
+
     return (
       <Layer key={`CustomNode${index}`}>
+        {/* node bar */}
         <Rectangle
           x={x}
           y={y}
           width={width}
           height={height}
           fill={nodeColor}
-          fillOpacity="0.8"
+          stroke="#374151"
         />
-        {/* Node name centered above */}
+
+        {/* node name – sits beside the bar, never off-canvas */}
         <text
-          x={x + width / 2}
-          y={y - 6}
-          textAnchor="middle"
-          fontSize="14"
+          x={nameX}
+          y={y - 8}
+          textAnchor={anchor}
+          fontSize="16"
           fontWeight="600"
           fill="#374151"
           style={{ textShadow: '0 0 3px #fff' }}
         >
-          {truncate(nodeName, 20)}
+          {name}
         </text>
-        {/* Total kg inside the bar */}
-        <text
-          x={x + width / 2}
-          y={y + height / 2}
-          textAnchor="middle"
-          alignmentBaseline="middle"
-          fontSize="11"
-          fill="#1e293b"
-          style={{ pointerEvents: 'none' }}
-        >
-          {totalKg.toLocaleString()} kg
-        </text>
-        <title>{`${nodeName}\nTotal ${nutrient}: ${Math.round(totalKg).toLocaleString()} kg`}</title>
+
+        {/* total kg value – only if > 0 */}
+        {totalKg >= 1 && (
+          <text
+            x={valueX}
+            y={y + height / 2}
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            fontSize="11"
+            fill="#1e293b"
+            style={{ pointerEvents: 'none' }}
+          >
+            {Math.round(totalKg).toLocaleString()} kg
+          </text>
+        )}
+
+        <title>{`${node}\nTotal ${nutrient}: ${Math.round(totalKg).toLocaleString()} kg`}</title>
       </Layer>
     );
   };
