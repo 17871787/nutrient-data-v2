@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ResponsiveContainer, Sankey, Rectangle, Tooltip } from 'recharts';
+import { ResponsiveContainer, Sankey, Rectangle, Tooltip, Layer } from 'recharts';
 import PropTypes from 'prop-types';
 
 // colour palette keyed by KOU type
@@ -99,7 +99,80 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
     }
   }, [kous, pathways, nutrient]);
 
-  // Remove custom node renderer for now to isolate the issue
+  // Custom node component with labels
+  const CustomNode = ({ x, y, width, height, index, payload }) => {
+    const isOut = x > width / 2;
+    
+    // Try to determine node type from name or position
+    const nodeName = payload.name || data.nodes[index];
+    let nodeColor = '#3b82f6'; // default blue
+    
+    if (nodeName.toLowerCase().includes('field')) nodeColor = nodeColours.field;
+    else if (nodeName.toLowerCase().includes('herd') || nodeName.toLowerCase().includes('livestock')) nodeColor = nodeColours.livestock_group;
+    else if (nodeName.toLowerCase().includes('feed') || nodeName.toLowerCase().includes('silage') || nodeName.toLowerCase().includes('conc')) nodeColor = nodeColours.feed_store;
+    else if (nodeName.toLowerCase().includes('slurry') || nodeName.toLowerCase().includes('manure') || nodeName.toLowerCase().includes('fym')) nodeColor = nodeColours.manure_store;
+    else if (nodeName.toLowerCase().includes('milk') || nodeName.toLowerCase().includes('sales')) nodeColor = nodeColours.output;
+    else if (nodeName.toLowerCase().includes('supplier') || nodeName.toLowerCase().includes('external')) nodeColor = nodeColours.external;
+    
+    return (
+      <Layer key={`CustomNode${index}`}>
+        <Rectangle
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill={nodeColor}
+          fillOpacity="0.8"
+        />
+        <text
+          textAnchor={isOut ? "start" : "end"}
+          x={isOut ? x + width + 6 : x - 6}
+          y={y + height / 2}
+          fontSize="12"
+          fill="#374151"
+          alignmentBaseline="middle"
+        >
+          {payload.name || data.nodes[index]}
+        </text>
+      </Layer>
+    );
+  };
+
+  // Custom link component with value labels
+  const CustomLink = (props) => {
+    const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index } = props;
+    
+    // Calculate midpoint for label placement
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
+    
+    return (
+      <Layer key={`CustomLink${index}`}>
+        <path
+          d={`
+            M${sourceX},${sourceY}
+            C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
+          `}
+          stroke="#60a5fa"
+          strokeWidth={linkWidth}
+          fill="none"
+          strokeOpacity={0.4}
+        />
+        {linkWidth > 5 && ( // Only show label for significant flows
+          <text
+            x={midX}
+            y={midY - 5}
+            fontSize="10"
+            fill="#1f2937"
+            textAnchor="middle"
+            className="pointer-events-none"
+          >
+            {Math.round(props.payload.value).toLocaleString()} kg
+          </text>
+        )}
+      </Layer>
+    );
+  };
 
   // Show loading or empty state if no data
   if (!data.nodes.length || !data.links.length) {
@@ -117,10 +190,18 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
           <Sankey
             data={data}
             nodePadding={50}
-            link={{ stroke: '#60a5fa', strokeOpacity: 0.45 }}
-            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+            node={<CustomNode />}
+            link={<CustomLink />}
+            margin={{ top: 20, right: 120, bottom: 20, left: 120 }}
           >
-            <Tooltip formatter={v => `${Math.round(v).toLocaleString()} kg`} />
+            <Tooltip 
+              formatter={v => `${Math.round(v).toLocaleString()} kg ${nutrient}`}
+              contentStyle={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                border: '1px solid #e5e7eb',
+                borderRadius: '0.375rem'
+              }}
+            />
           </Sankey>
         </ResponsiveContainer>
       </div>
