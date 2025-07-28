@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { ArrowRight, Package, Beaker, MapPin, Milk, Factory, TrendingDown, AlertCircle } from 'lucide-react';
 
-const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
+const NutrientPathwaysView = ({ kous, pathways }) => {
+  const [selectedNutrient, setSelectedNutrient] = useState('N');
   // Helper function to format KOU type names
   const formatKOUTypeName = (type) => {
     if (!type) return '';
@@ -199,6 +200,28 @@ const NutrientPathwaysView = ({ kous, pathways, selectedNutrient = 'N' }) => {
 
   return (
     <div className="space-y-6">
+      {/* Nutrient Selector */}
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-700">Select Nutrient to Visualize</h3>
+          <div className="flex gap-2">
+            {['N', 'P', 'K', 'S'].map((nutrient) => (
+              <button
+                key={nutrient}
+                onClick={() => setSelectedNutrient(nutrient)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  selectedNutrient === nutrient 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {nutrient}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Flow Summary */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">

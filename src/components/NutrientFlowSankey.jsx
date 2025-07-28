@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ResponsiveContainer, Sankey, Rectangle, Tooltip, Layer } from 'recharts';
 import PropTypes from 'prop-types';
+import SankeyLegend from './SankeyLegend';
 
 // colour palette keyed by KOU type
 const nodeColours = {
@@ -12,7 +13,12 @@ const nodeColours = {
   external: '#6366f1',
 };
 
-export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
+// Helper to truncate long names
+const truncate = (str, max) => (str && str.length > max ? str.slice(0, max - 1) + '…' : str || '');
+
+export default function NutrientFlowSankey({ kous, pathways, nutrient: propNutrient }) {
+  const [selectedNutrient, setSelectedNutrient] = useState(propNutrient || 'N');
+  const nutrient = propNutrient || selectedNutrient;
   const data = useMemo(() => {
     try {
       // Safety check
@@ -92,7 +98,10 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
       // Convert map to array
       links.push(...linkMap.values());
       
-      return { nodes, links };
+      // Calculate max flow value for dynamic opacity
+      const maxDy = Math.max(...links.map(l => l.value), 1);
+      
+      return { nodes, links, maxDy };
     } catch (error) {
       console.error('Error processing Sankey data:', error);
       return { nodes: [], links: [] };
@@ -114,6 +123,11 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
     else if (nodeName.toLowerCase().includes('milk') || nodeName.toLowerCase().includes('sales')) nodeColor = nodeColours.output;
     else if (nodeName.toLowerCase().includes('supplier') || nodeName.toLowerCase().includes('external')) nodeColor = nodeColours.external;
     
+    // Calculate total nutrient flow through this node
+    const totalKg = data.links
+      .filter(l => l.source === index || l.target === index)
+      .reduce((s, l) => s + l.value, 0);
+    
     return (
       <Layer key={`CustomNode${index}`}>
         <Rectangle
@@ -124,53 +138,47 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
           fill={nodeColor}
           fillOpacity="0.8"
         />
+        {/* Node name centered above */}
         <text
-          textAnchor={isOut ? "start" : "end"}
-          x={isOut ? x + width + 6 : x - 6}
-          y={y + height / 2}
-          fontSize="12"
+          x={x + width / 2}
+          y={y - 6}
+          textAnchor="middle"
+          fontSize="14"
+          fontWeight="600"
           fill="#374151"
-          alignmentBaseline="middle"
+          style={{ textShadow: '0 0 3px #fff' }}
         >
-          {payload.name || data.nodes[index]}
+          {truncate(nodeName, 20)}
         </text>
+        {/* Total kg inside the bar */}
+        <text
+          x={x + width / 2}
+          y={y + height / 2}
+          textAnchor="middle"
+          alignmentBaseline="middle"
+          fontSize="11"
+          fill="#1e293b"
+          style={{ pointerEvents: 'none' }}
+        >
+          {totalKg.toLocaleString()} kg
+        </text>
+        <title>{`${nodeName}\nTotal ${nutrient}: ${Math.round(totalKg).toLocaleString()} kg`}</title>
       </Layer>
     );
   };
 
-  // Custom link component with value labels
+  // Custom link component without value labels to prevent overlap
   const CustomLink = (props) => {
-    const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index } = props;
-    
-    // Calculate midpoint for label placement
-    const midX = (sourceX + targetX) / 2;
-    const midY = (sourceY + targetY) / 2;
+    const opacity = 0.3 + 0.7 * (props.payload.value / data.maxDy);
     
     return (
-      <Layer key={`CustomLink${index}`}>
-        <path
-          d={`
-            M${sourceX},${sourceY}
-            C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
-          `}
-          stroke="#60a5fa"
-          strokeWidth={linkWidth}
-          fill="none"
-          strokeOpacity={0.4}
-        />
-        {linkWidth > 5 && ( // Only show label for significant flows
-          <text
-            x={midX}
-            y={midY - 5}
-            fontSize="10"
-            fill="#1f2937"
-            textAnchor="middle"
-            className="pointer-events-none"
-          >
-            {Math.round(props.payload.value).toLocaleString()} kg
-          </text>
-        )}
-      </Layer>
+      <path
+        d={`M${props.sourceX},${props.sourceY} C${props.sourceControlX},${props.sourceY} ${props.targetControlX},${props.targetY} ${props.targetX},${props.targetY}`}
+        stroke="#60a5fa"
+        strokeWidth={props.linkWidth}
+        strokeOpacity={opacity}
+        fill="none"
+      />
     );
   };
 
@@ -183,16 +191,41 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
     );
   }
 
+  // Calculate responsive height based on number of nodes
+  const diagramHeight = Math.max(400, Math.min(800, data.nodes.length * 40));
+
   try {
     return (
-      <div style={{ width: '100%', height: 500 }}>
-        <ResponsiveContainer>
+      <div className="space-y-4">
+        {/* Nutrient Selector */}
+        <div className="flex items-center gap-4 mb-4">
+          <span className="text-sm font-medium text-gray-700">Show nutrient:</span>
+          <div className="flex gap-2">
+            {['N', 'P', 'K', 'S'].map((n) => (
+              <button
+                key={n}
+                onClick={() => setSelectedNutrient(n)}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  nutrient === n
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ width: '100%', height: diagramHeight }}>
+          <ResponsiveContainer>
           <Sankey
             data={data}
-            nodePadding={50}
+            nodePadding={30}
             node={<CustomNode />}
             link={<CustomLink />}
             margin={{ top: 20, right: 120, bottom: 20, left: 120 }}
+            align="center"
           >
             <Tooltip 
               formatter={v => `${Math.round(v).toLocaleString()} kg ${nutrient}`}
@@ -204,6 +237,10 @@ export default function NutrientFlowSankey({ kous, pathways, nutrient = 'N' }) {
             />
           </Sankey>
         </ResponsiveContainer>
+        </div>
+        
+        {/* Legend */}
+        <SankeyLegend />
       </div>
     );
   } catch (error) {

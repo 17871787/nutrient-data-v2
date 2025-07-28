@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { MapPin, Info, AlertTriangle, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { NUTRIENT_LIMITS, getNutrientStatus, getStatusColor } from '../config/nutrientLimits';
 
-const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
+const FarmNutrientMap = ({ kous, pathways }) => {
+  const [selectedNutrient, setSelectedNutrient] = useState('N');
   const [selectedField, setSelectedField] = useState(null);
   const [showLegend, setShowLegend] = useState(true);
 
@@ -257,23 +258,46 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">
-            Farm Nutrient Map - {selectedNutrient}
-          </h3>
-          <p className="text-sm text-gray-600">
-            Visual representation of nutrient status across all fields
-          </p>
+    <div className="space-y-6">
+      {/* Nutrient Selector */}
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-700">Select Nutrient to Visualize</h3>
+          <div className="flex gap-2">
+            {['N', 'P', 'K', 'S'].map((nutrient) => (
+              <button
+                key={nutrient}
+                onClick={() => setSelectedNutrient(nutrient)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  selectedNutrient === nutrient 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {nutrient}
+              </button>
+            ))}
+          </div>
         </div>
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          className="text-sm text-gray-600 hover:text-gray-800"
-        >
-          {showLegend ? 'Hide' : 'Show'} Legend
-        </button>
       </div>
+
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">
+              Farm Nutrient Map - {selectedNutrient}
+            </h3>
+            <p className="text-sm text-gray-600">
+              Visual representation of nutrient status across all fields
+            </p>
+          </div>
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className="text-sm text-gray-600 hover:text-gray-800"
+          >
+            {showLegend ? 'Hide' : 'Show'} Legend
+          </button>
+        </div>
 
       <div className="flex gap-6">
         {/* Map Area */}
@@ -333,6 +357,7 @@ const FarmNutrientMap = ({ kous, pathways, selectedNutrient = 'N' }) => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

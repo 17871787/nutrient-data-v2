@@ -26,7 +26,6 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
   const [selectedKOU, setSelectedKOU] = useState(null);
   const [kous, setKous] = useState({});
   const [pathways, setPathways] = useState([]);
-  const [selectedNutrient, setSelectedNutrient] = useState('N');
   const [showDataManagement, setShowDataManagement] = useState(false);
 
   // Initialize KOU structure
@@ -349,30 +348,12 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
 
         {/* Nutrient Flow Summary */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Nutrient Flow Summary</h3>
-            <div className="flex gap-2">
-              {['N', 'P', 'K', 'S'].map(nutrient => (
-                <button
-                  key={nutrient}
-                  onClick={() => setSelectedNutrient(nutrient)}
-                  className={`px-3 py-1 rounded-lg transition-colors ${
-                    selectedNutrient === nutrient 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {nutrient}
-                </button>
-              ))}
-            </div>
-          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Nutrient Flow Summary</h3>
 
           {/* Sankey diagram visualization */}
           <NutrientFlowSankey
             kous={kous}
             pathways={pathways}
-            nutrient={selectedNutrient}
           />
         </div>
       </div>
@@ -603,29 +584,6 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
           </div>
         </div>
 
-        {/* Nutrient Selector for Pathways and Field Map Views */}
-        {(activeView === 'pathways' || activeView === 'fieldmap') && !selectedKOU && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-700">Select Nutrient to Visualize</h3>
-              <div className="flex gap-2">
-                {['N', 'P', 'K', 'S'].map(nutrient => (
-                  <button
-                    key={nutrient}
-                    onClick={() => setSelectedNutrient(nutrient)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      selectedNutrient === nutrient 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {nutrient}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Main Content */}
         {selectedKOU ? (
@@ -635,7 +593,6 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
             <NutrientPathwaysView 
               kous={kous} 
               pathways={pathways} 
-              selectedNutrient={selectedNutrient} 
             />
           </Suspense>
         ) : activeView === 'fieldmap' ? (
@@ -643,7 +600,6 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
             <FarmNutrientMap
               kous={kous}
               pathways={pathways}
-              selectedNutrient={selectedNutrient}
             />
           </Suspense>
         ) : activeView === 'scenarios' ? (
