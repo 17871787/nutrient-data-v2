@@ -42,10 +42,10 @@ export function ConcentrateInput({
       annual = annualFromPerL(parseFloat(val) || 0, milkL);
     }
 
-    // Update all three values
+    // Update all three values (round to 1 decimal for perCowDay and perL)
     setValue(`inputs.${index}.amount`, annual);
-    setValue(`inputs.${index}.perCowDay`, perCowDayFromAnnual(annual, cows));
-    setValue(`inputs.${index}.perL`, perLFromAnnual(annual, milkL));
+    setValue(`inputs.${index}.perCowDay`, Math.round(perCowDayFromAnnual(annual, cows) * 10) / 10);
+    setValue(`inputs.${index}.perL`, Math.round(perLFromAnnual(annual, milkL) * 10) / 10);
   };
 
   const handleModeChange = (newMode) => {
@@ -140,8 +140,8 @@ export function ConcentrateInput({
             register={register}
             field={`inputs.${index}.perL`}
             errors={errors}
-            step="0.001"
-            helpText="kg of feed per litre of milk (e.g., 0.30 = 300g concentrate per litre sold)"
+            step="0.1"
+            helpText="kg of feed per litre of milk (e.g., 0.3 = 300g concentrate per litre sold)"
             onChange={(e) => handleValueChange(e.target.value)}
           />
         )}
