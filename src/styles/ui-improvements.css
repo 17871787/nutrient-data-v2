@@ -119,3 +119,18 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* UI Improvement #4: Distinct heading styles with weight variations */
+@layer base {
+  html.beta-heading-styles h1 { @apply font-extrabold text-4xl leading-tight; }
+  html.beta-heading-styles h2 { @apply font-bold text-3xl mt-6 mb-2; }
+  html.beta-heading-styles h3 { @apply font-semibold text-2xl mt-4 mb-1; }
+  html.beta-heading-styles h4 { @apply font-medium text-xl mt-3 mb-1; }
+}
+
+/* UI Improvement #5: Letter-spacing for uppercase labels */
+@layer base {
+  html.beta-letterspace .uc-label { 
+    @apply tracking-wide-md;
+  }
+}

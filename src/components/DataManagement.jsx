@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Upload, Save, X, Plus, Trash2, Edit2, FileJson, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { KOU_TYPES, PATHWAY_TYPES, createKOU, createPathway } from '../data/kouStructure';
+import { getBorderOrShadow } from '../utils/styleHelpers';
 
 const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClose }) => {
   const [activeTab, setActiveTab] = useState('kous');
@@ -25,7 +26,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
           type={type}
           value={value || ''}
           onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
-          className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className={`flex-1 px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
           min={min}
           max={max}
           step={step}
@@ -80,7 +81,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
             <select
               value={editedKOU.type}
               onChange={(e) => updateProperty('type', e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
             >
               {Object.entries(KOU_TYPES).map(([key, value]) => (
                 <option key={key} value={value}>{key.replace(/_/g, ' ')}</option>
@@ -157,7 +158,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
         <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className={`px-4 py-2 ${getBorderOrShadow('button')} rounded-lg hover:bg-gray-50`}
           >
             Cancel
           </button>
@@ -199,7 +200,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
             <select
               value={editedPathway.from}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, from: e.target.value }))}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">Select KOU...</option>
               {Object.values(kous).map(kou => (
@@ -213,7 +214,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
             <select
               value={editedPathway.to}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, to: e.target.value }))}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">Select KOU...</option>
               {Object.values(kous).map(kou => (
@@ -227,7 +228,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
             <select
               value={editedPathway.type}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, type: e.target.value }))}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
             >
               {Object.entries(PATHWAY_TYPES).map(([key, value]) => (
                 <option key={key} value={value}>{key.replace(/_/g, ' ')}</option>
@@ -255,7 +256,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
         <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className={`px-4 py-2 ${getBorderOrShadow('button')} rounded-lg hover:bg-gray-50`}
           >
             Cancel
           </button>
@@ -519,7 +520,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
                   {expandedSections[type] && (
                     <div className="mt-2 space-y-2">
                       {kouList.map(kou => (
-                        <div key={kou.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div key={kou.id} className={`bg-white ${getBorderOrShadow('card')} rounded-lg p-4`}>
                           <div className="flex items-center justify-between">
                             <div>
                               <h4 className="font-medium text-gray-900">{kou.name}</h4>
@@ -584,7 +585,7 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
               {/* Pathways List */}
               <div className="space-y-2">
                 {pathways.map((pathway, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div key={index} className={`bg-white ${getBorderOrShadow('card')} rounded-lg p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
