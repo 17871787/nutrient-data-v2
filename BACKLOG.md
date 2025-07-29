@@ -3,17 +3,17 @@
 Based on the Design Philosophy evaluation, here are 40 prioritized UI improvements for nutrient-data-v2:
 
 ## Typography & Visual Hierarchy
-1. Implement consistent type scale using golden ratio [clarity]
-2. Add subtle text shadows for improved legibility [clarity]
-3. Increase line-height to 1.5x for body text [readability]
-4. Create distinct heading styles with weight variations [hierarchy]
-5. Add letter-spacing adjustments for uppercase labels [polish]
+1. Implement consistent type scale using golden ratio [clarity] **DONE – PR ebfc8bd**
+2. Add subtle text shadows for improved legibility [clarity] **DONE – PR ebfc8bd**
+3. Increase line-height to 1.5x for body text [readability] **DONE – PR ebfc8bd**
+4. Create distinct heading styles with weight variations [hierarchy] **DONE – PR ac1cbda**
+5. Add letter-spacing adjustments for uppercase labels [polish] **DONE – PR ac1cbda**
 
 ## Color & Visual Refinement
-6. Replace harsh borders with subtle shadows [sophistication]
-7. Implement muted color palette for reduced eye strain [comfort]
-8. Add hover state color transitions (200ms) [feedback]
-9. Create focus states with subtle glow effects [accessibility]
+6. Replace harsh borders with subtle shadows [sophistication] **DONE – PR ac1cbda**
+7. Implement muted color palette for reduced eye strain [comfort] **DONE – PR pending**
+8. Add hover state color transitions (200ms) [feedback] **DONE – PR pending**
+9. Create focus states with subtle glow effects [accessibility] **DONE – PR pending**
 10. Desaturate success/error colors for elegance [restraint]
 
 ## Spacing & Layout
