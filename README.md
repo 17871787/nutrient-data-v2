@@ -63,3 +63,24 @@ Uses KOU-based structure where each operational unit tracks:
 ## Deployment
 
 Ready for Vercel deployment. No backend required - uses localStorage.
+
+## UI Improvements
+
+This project includes progressive UI enhancements that can be toggled on/off:
+
+### Current Features (v1)
+- **Golden Ratio Typography** - Mathematical type scale for optimal hierarchy
+- **Subtle Text Shadows** - Enhanced legibility across all text elements  
+- **Enhanced Line Height** - 1.5x-1.75x spacing for comfortable reading
+
+### Configuration
+Toggle features in `src/config/uiFeatures.js`:
+```javascript
+export const UI_FEATURES = {
+  goldenRatioTypography: true,  // Mathematical type scale
+  textShadows: true,            // Subtle shadows for legibility
+  enhancedLineHeight: true,     // Improved line spacing
+};
+```
+
+See `BACKLOG.md` for the complete 40-item UI improvement roadmap.

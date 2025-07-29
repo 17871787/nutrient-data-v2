@@ -1,0 +1,121 @@
+/* UI Improvement #1: Golden Ratio Type Scale */
+/* Feature toggle: Add class="beta-typography" to enable */
+.beta-typography {
+  /* Golden ratio: 1.618 */
+  --type-scale-ratio: 1.618;
+  --type-base: 1rem;
+  
+  /* Type scale using golden ratio */
+  --type-xs: calc(var(--type-base) / var(--type-scale-ratio));     /* 0.618rem */
+  --type-sm: calc(var(--type-xs) * 1.2);                           /* 0.742rem */
+  --type-base: 1rem;                                               /* 1rem */
+  --type-lg: calc(var(--type-base) * var(--type-scale-ratio));     /* 1.618rem */
+  --type-xl: calc(var(--type-lg) * var(--type-scale-ratio));       /* 2.618rem */
+  --type-2xl: calc(var(--type-xl) * 1.236);                        /* 3.236rem */
+}
+
+.beta-typography h1 {
+  font-size: var(--type-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.beta-typography h2 {
+  font-size: var(--type-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.beta-typography h3 {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.beta-typography p,
+.beta-typography .text-base {
+  font-size: var(--type-base);
+  line-height: 1.618; /* Golden ratio for optimal readability */
+}
+
+.beta-typography .text-sm {
+  font-size: var(--type-sm);
+  line-height: 1.5;
+}
+
+.beta-typography .text-xs {
+  font-size: var(--type-xs);
+  line-height: 1.5;
+}
+
+/* UI Improvement #2: Subtle Text Shadows for Legibility */
+/* Feature toggle: Add class="beta-shadows" to enable */
+.beta-shadows h1,
+.beta-shadows h2,
+.beta-shadows h3,
+.beta-shadows h4 {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.beta-shadows .text-white {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.beta-shadows .text-gray-600,
+.beta-shadows .text-gray-700 {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
+}
+
+/* Improved legibility for colored text on colored backgrounds */
+.beta-shadows .bg-blue-600 *,
+.beta-shadows .bg-green-600 *,
+.beta-shadows .bg-red-600 * {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* UI Improvement #3: Enhanced Line Height for Body Text */
+/* Feature toggle: const enableEnhancedLineHeight = true in component */
+.beta-line-height p {
+  line-height: 1.75; /* 1.5x would be 1.5, but 1.75 provides even better readability */
+}
+
+.beta-line-height .text-sm {
+  line-height: 1.6;
+}
+
+.beta-line-height .text-xs {
+  line-height: 1.5;
+}
+
+.beta-line-height li {
+  line-height: 1.7;
+  margin-bottom: 0.25rem;
+}
+
+.beta-line-height .input-label {
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+/* Paragraph spacing for better readability */
+.beta-line-height p + p {
+  margin-top: 1.25rem;
+}
+
+/* List item spacing */
+.beta-line-height ul,
+.beta-line-height ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Additional refinements when all three features are enabled */
+.beta-typography.beta-shadows.beta-line-height {
+  /* Optimized reading experience with all improvements */
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

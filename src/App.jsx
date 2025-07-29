@@ -2,6 +2,7 @@ import { useState } from 'react'
 import HighResolutionNutrientBudget from './components/HighResolutionNutrientBudget'
 import SimpleEntryMode from './components/SimpleEntry/SimpleEntryMode'
 import ErrorBoundary from './components/ErrorBoundary'
+import { getUIClasses } from './config/uiFeatures'
 
 function App() {
   const [mode, setMode] = useState('simple') // Start with simple mode
@@ -26,19 +27,21 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
-      {mode === 'simple' ? (
-        <SimpleEntryMode 
-          onSwitchToPro={handleSwitchToPro}
-          onSaveData={handleSaveSimpleData}
-        />
-      ) : (
-        <HighResolutionNutrientBudget 
-          initialData={initialData}
-          onSwitchToSimple={handleSwitchToSimple}
-        />
-      )}
-    </ErrorBoundary>
+    <div className={getUIClasses()}>
+      <ErrorBoundary>
+        {mode === 'simple' ? (
+          <SimpleEntryMode 
+            onSwitchToPro={handleSwitchToPro}
+            onSaveData={handleSaveSimpleData}
+          />
+        ) : (
+          <HighResolutionNutrientBudget 
+            initialData={initialData}
+            onSwitchToSimple={handleSwitchToSimple}
+          />
+        )}
+      </ErrorBoundary>
+    </div>
   )
 }
 
