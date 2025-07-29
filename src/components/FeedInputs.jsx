@@ -61,7 +61,7 @@ export function ConcentrateInput({
           type="button"
           onClick={() => removeInput(index)}
           className="text-red-500 hover:text-red-700"
-          aria-label={`Remove ${concentrate ? 'concentrate' : 'forage'} input`}
+          aria-label="Remove concentrate input"
           title="Remove"
         >
           <Trash2 className="w-4 h-4" />
@@ -217,7 +217,7 @@ export function ForageInput({
           type="button"
           onClick={() => removeInput(index)}
           className="text-red-500 hover:text-red-700"
-          aria-label={`Remove ${concentrate ? 'concentrate' : 'forage'} input`}
+          aria-label="Remove forage input"
           title="Remove"
         >
           <Trash2 className="w-4 h-4" />
