@@ -148,7 +148,7 @@ export function ConcentrateInput({
         
         {/* Display helper line with all conversions */}
         <p className="text-xs text-gray-500 mt-1 ml-40">
-          = {feed.perCowDay.toFixed(1)} kg cow⁻¹ day⁻¹ • {feed.perL.toFixed(2)} kg L⁻¹ • {feed.annualT.toFixed(0)} t/yr
+          = {feed.perCowDay.toFixed(1)} kg cow⁻¹ day⁻¹ • {feed.perL.toFixed(1)} kg L⁻¹ • {feed.annualT.toFixed(0)} t/yr
         </p>
       </div>
       
