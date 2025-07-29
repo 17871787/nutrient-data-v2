@@ -219,3 +219,72 @@
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   }
 }
+
+/* UI Improvement #10: Desaturated success/error colors */
+@layer base {
+  html.beta-desat-alerts {
+    --color-success-bg: #d1fae5;   /* emerald-100 */
+    --color-success-tx: #065f46;   /* emerald-800 */
+    --color-error-bg: #fee2e2;     /* red-100 */
+    --color-error-tx: #7f1d1d;     /* red-800 */
+  }
+  
+  html.beta-desat-alerts .alert-success { 
+    background: var(--color-success-bg); 
+    color: var(--color-success-tx);
+  }
+  
+  html.beta-desat-alerts .alert-error { 
+    background: var(--color-error-bg); 
+    color: var(--color-error-tx);
+  }
+  
+  /* Apply to Tailwind utility classes */
+  html.beta-desat-alerts .bg-green-50 { background-color: var(--color-success-bg); }
+  html.beta-desat-alerts .bg-red-50 { background-color: var(--color-error-bg); }
+  html.beta-desat-alerts .text-green-600 { color: var(--color-success-tx); }
+  html.beta-desat-alerts .text-red-600 { color: var(--color-error-tx); }
+  html.beta-desat-alerts .border-green-300 { border-color: #a7f3d0; }
+  html.beta-desat-alerts .border-red-300 { border-color: #fecaca; }
+}
+
+/* UI Improvement #11: Input padding 16px */
+@layer base {
+  html.beta-input-pad input:not([type=checkbox]):not([type=radio]),
+  html.beta-input-pad textarea,
+  html.beta-input-pad select {
+    @apply py-4;
+  }
+}
+
+/* UI Improvement #12: 8px baseline grid */
+@layer base {
+  html.beta-8grid {
+    --space-1: 0.5rem;   /* 8px */
+    --space-2: 1rem;     /* 16px */
+    --space-3: 1.5rem;   /* 24px */
+    --space-4: 2rem;     /* 32px */
+    --space-5: 2.5rem;   /* 40px */
+    --space-6: 3rem;     /* 48px */
+  }
+  
+  html.beta-8grid .g-mt-1 { margin-top: var(--space-1); }
+  html.beta-8grid .g-mt-2 { margin-top: var(--space-2); }
+  html.beta-8grid .g-mt-3 { margin-top: var(--space-3); }
+  html.beta-8grid .g-mt-4 { margin-top: var(--space-4); }
+  
+  html.beta-8grid .g-mb-1 { margin-bottom: var(--space-1); }
+  html.beta-8grid .g-mb-2 { margin-bottom: var(--space-2); }
+  html.beta-8grid .g-mb-3 { margin-bottom: var(--space-3); }
+  html.beta-8grid .g-mb-4 { margin-bottom: var(--space-4); }
+  
+  html.beta-8grid .g-gap-1 { gap: var(--space-1); }
+  html.beta-8grid .g-gap-2 { gap: var(--space-2); }
+  html.beta-8grid .g-gap-3 { gap: var(--space-3); }
+  html.beta-8grid .g-gap-4 { gap: var(--space-4); }
+  
+  html.beta-8grid .g-p-1 { padding: var(--space-1); }
+  html.beta-8grid .g-p-2 { padding: var(--space-2); }
+  html.beta-8grid .g-p-3 { padding: var(--space-3); }
+  html.beta-8grid .g-p-4 { padding: var(--space-4); }
+}

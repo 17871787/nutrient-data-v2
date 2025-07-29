@@ -7,6 +7,7 @@ import {
   perCowDayFromAnnual, 
   perLFromAnnual 
 } from '../utils/convert';
+import { enableEightPxGrid } from '../config/designFlags';
 
 export function ConcentrateInput({ 
   index, 
@@ -155,7 +156,7 @@ export function ConcentrateInput({
       </div>
       
       {/* Nutrient content inputs */}
-      <div className="grid grid-cols-2 gap-3 mt-3">
+      <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
         <InputRow
           label="CP Content"
           unit="%"
@@ -267,7 +268,7 @@ export function ForageInput({
       </div>
       
       {/* Nutrient content inputs */}
-      <div className="grid grid-cols-2 gap-3 mt-3">
+      <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
         <InputRow
           label="CP Content"
           unit="%"

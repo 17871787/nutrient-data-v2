@@ -8,6 +8,9 @@ export default {
     extend: {
       letterSpacing: {
         'wide-md': '.08em'
+      },
+      padding: {
+        'field-y': '1rem'  // 16px
       }
     },
   },

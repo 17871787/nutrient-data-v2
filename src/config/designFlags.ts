@@ -4,3 +4,6 @@ export const enableSoftShadow = true;
 export const enableMutedPalette = true;
 export const enableHoverTransitions = true;
 export const enableFocusGlow = true;
+export const enableDesatAlerts = true;  // backlog #10
+export const enableInputPadding = true;  // backlog #11
+export const enableEightPxGrid = true;   // backlog #12

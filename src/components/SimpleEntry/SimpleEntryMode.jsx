@@ -587,8 +587,8 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             {/* NVZ Compliance Alert */}
             <div className={`rounded-lg p-4 border-2 ${
               nutrientBalance.nvzCompliant 
-                ? 'bg-green-50 border-green-300' 
-                : 'bg-red-50 border-red-300'
+                ? 'bg-green-50 border-green-300 alert-success' 
+                : 'bg-red-50 border-red-300 alert-error'
             }`}>
               <div className="flex items-center gap-2">
                 {nutrientBalance.nvzCompliant ? (
