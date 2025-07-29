@@ -18,6 +18,8 @@ const ScenarioPlanning = React.lazy(() => import('./ScenarioPlanning'));
 const DataManagement = React.lazy(() => import('./DataManagement'));
 import NutrientFlowSankey from './NutrientFlowSankey';
 import SlurryValueCard from './SlurryValueCard';
+import GHGIndicator from './GHGIndicator';
+import { calculateSystemBalance, determineSystemType } from '../utils/systemCalculations';
 
 const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
   const SCHEMA_VERSION = 1; // Add schema version constant
@@ -343,8 +345,23 @@ const HighResolutionNutrientBudget = ({ initialData, onSwitchToSimple }) => {
           </div>
         </div>
 
-        {/* Slurry Value Card */}
-        <SlurryValueCard kous={kous} pathways={pathways} />
+        {/* Slurry Value Card and GHG Indicator */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SlurryValueCard kous={kous} pathways={pathways} />
+          
+          {/* GHG Indicator */}
+          {(() => {
+            const systemBalance = calculateSystemBalance(kous, pathways);
+            const systemType = determineSystemType(kous);
+            return (
+              <GHGIndicator 
+                nue={systemBalance.nEfficiency} 
+                system={systemType}
+                showDetails={true}
+              />
+            );
+          })()}
+        </div>
 
         {/* Nutrient Flow Summary */}
         <div className="bg-white rounded-lg shadow-lg p-6">

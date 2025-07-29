@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calculator, Save, Copy, Trash2, Plus, TrendingUp, TrendingDown, DollarSign, Leaf, Droplets, Activity, AlertTriangle, Info, ArrowRight, CheckCircle } from 'lucide-react';
+import { Calculator, Save, Copy, Trash2, Plus, TrendingUp, TrendingDown, DollarSign, Leaf, Droplets, Activity, AlertTriangle, Info, ArrowRight, CheckCircle, Cloud } from 'lucide-react';
 import { validateNutrientValue, NUTRIENT_LIMITS } from '../config/nutrientLimits';
+import { GHGPill } from './GHGIndicator';
+import { estimateGHGfromNUE } from '../utils/ghgEstimation';
 
 const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
   const [scenarios, setScenarios] = useState({
@@ -212,6 +214,10 @@ const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
       .reduce((sum, k) => sum + (k.properties.area || 0), 0);
     const organicNPerHa = totalArea > 0 ? organicN / totalArea : 0;
 
+    // GHG estimation from NUE
+    const systemType = Object.values(kous).some(k => k.type === 'field') ? 'mixed' : 'housed';
+    const ghgEstimate = estimateGHGfromNUE(nEfficiency, systemType);
+
     return {
       totalInputs,
       totalOutputs,
@@ -219,7 +225,8 @@ const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
       nEfficiency,
       pEfficiency,
       organicNPerHa,
-      nvzCompliant: organicNPerHa <= 170
+      nvzCompliant: organicNPerHa <= 170,
+      ghgEstimate
     };
   };
 
@@ -303,7 +310,8 @@ const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
         pEfficiency: activeMetrics.pEfficiency - baselineMetrics.pEfficiency,
         nInputs: activeMetrics.totalInputs.N - baselineMetrics.totalInputs.N,
         nLosses: activeMetrics.totalLosses.N - baselineMetrics.totalLosses.N,
-        organicN: activeMetrics.organicNPerHa - baselineMetrics.organicNPerHa
+        organicN: activeMetrics.organicNPerHa - baselineMetrics.organicNPerHa,
+        ghg: activeMetrics.ghgEstimate.value - baselineMetrics.ghgEstimate.value
       }
     };
   }, [scenarios, activeScenario]);
@@ -538,6 +546,34 @@ const ScenarioPlanning = ({ kous, pathways, onUpdateScenario }) => {
                       </span>
                     )}
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <Cloud className="w-4 h-4 text-gray-500" />
+                    GHG Intensity
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">
+                      {comparisonData.baseline.ghgEstimate.value} 
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <span className="font-bold text-gray-900">
+                      {comparisonData.active.ghgEstimate.value} kg CO₂/L
+                    </span>
+                    {comparisonData.changes.ghg !== 0 && (
+                      <span className={`text-sm font-medium ${
+                        comparisonData.changes.ghg < 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        ({comparisonData.changes.ghg > 0 ? '+' : ''}{comparisonData.changes.ghg.toFixed(2)})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Estimated from NUE
                 </div>
               </div>
             </div>

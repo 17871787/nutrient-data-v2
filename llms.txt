@@ -1,156 +1,274 @@
-# Nutrient Budget Tool - Technical Documentation
+# Nutrient Data Management System - Project Documentation
 
-## Project Overview
-A React-based farm nutrient management system with dual-mode interface: Simple (wizard) and Pro (KOU-based).
-Built with Vite, React 18, Tailwind CSS, Recharts, React Hook Form + Zod.
+## Overview
+A comprehensive nutrient flow modeling application for dairy farms, tracking nitrogen (N), phosphorus (P), potassium (K), and sulfur (S) through farm systems. Features both Simple Entry and Pro modes for different user expertise levels.
 
-## Architecture Goals
-1. Progressive disclosure - start simple, reveal complexity when needed
-2. Data persistence with schema versioning
-3. Economic value visualization 
-4. Compliance checking (NVZ 170kg N/ha limit)
-5. Bidirectional mode switching with data preservation
+## Project Goals
+1. **Accurate Nutrient Tracking**: Model nutrient flows through dairy farm systems
+2. **Regulatory Compliance**: Ensure NVZ (Nitrate Vulnerable Zone) compliance (170 kg N/ha limit)
+3. **Efficiency Optimization**: Calculate and improve NUE (Nitrogen Use Efficiency) and PUE (Phosphorus Use Efficiency)
+4. **Environmental Impact**: Estimate GHG emissions using NUE as proxy
+5. **User Flexibility**: Support both simple data entry and complex KOU-based modeling
 
-## Core Data Models
+## Architecture
 
-### KOU (Key Operational Unit)
+### Core Data Models
+
+#### Simple Entry Schema (src/schemas/simpleEntrySchema.js)
 ```javascript
-{
-  id: string,
-  type: 'field' | 'livestock_group' | 'feed_store' | 'manure_store' | 'output' | 'external',
+farmInfo: {
   name: string,
-  properties: {
-    // Type-specific: area, capacity, animalCount, nutrientContent, etc.
-  }
+  totalArea: number,        // hectares
+  milkingCows: number,      // head count
+  youngstock0_12: number,   // calves
+  youngstock12_calving: number, // heifers
+  milkCPpct: number,        // milk crude protein %
+  mortalityPct: number      // annual mortality %
+}
+
+inputs: [{
+  source: enum,             // concentrate, silage, hay, straw, fertiliser_*
+  label: string,
+  forageType: string,       // for forage selection
+  fertilizerType: string,   // for fertilizer selection
+  amount: number,           // tonnes/year or kg/year
+  feedMode: enum,           // annual, daily
+  dailyRate: number,        // kg/cow/day
+  cpContent: number,        // CP% on DM basis
+  nContent: number,         // N%
+  availabilityN: number,    // N-availability factor (0-1)
+  pContent: number,         // P%
+  kContent: number,         // K%
+  sContent: number          // S%
+}]
+
+outputs: [{
+  type: enum,               // milk, livestock
+  label: string,
+  amount: number,           // litres/year or kg
+  fatPct: number,           // butter-fat %
+  proteinPct: number,       // true protein %
+  nContent: number,         // N%
+  pContent: number          // P%
+}]
+
+manure: {
+  slurryApplied: number,    // m³/year
+  slurryNContent: number,   // kg/m³
+  slurryPContent: number,   // kg/m³
+  slurryAvailabilityN: number, // fraction (0-1)
+  slurryImported: number,   // m³/year
+  slurryExported: number    // m³/year
 }
 ```
 
-### Pathway (Nutrient Transfer)
+#### KOU Structure (src/data/kouStructure.js)
 ```javascript
-{
-  id: string,
-  from: string, // KOU id
-  to: string,   // KOU id
-  type: 'feeding' | 'manure_application' | 'fertilizer_application' | ...,
-  nutrients: { N: number, P: number, K: number, S: number }
+KOU_TYPES: {
+  FIELD: 'field',
+  LIVESTOCK_GROUP: 'livestock_group',
+  FEED_STORE: 'feed_store',
+  MANURE_STORE: 'manure_store',
+  EXTERNAL: 'external',
+  OUTPUT: 'output'
+}
+
+PATHWAY_TYPES: {
+  FEEDING: 'feeding',
+  MANURE_PRODUCTION: 'manure_production',
+  MANURE_APPLICATION: 'manure_application',
+  FERTILIZER_APPLICATION: 'fertilizer_application',
+  HARVEST: 'harvest',
+  SALE: 'sale',
+  PURCHASE: 'purchase',
+  ATMOSPHERIC_LOSS: 'atmospheric_loss',
+  WATER_LOSS: 'water_loss'
 }
 ```
 
-## Key Components & Functions
+### Key Functions
 
-### /src/App.jsx
-- `App()` - Root component managing mode state
-- Switches between SimpleEntryMode and HighResolutionNutrientBudget
-
-### /src/components/SimpleEntry/SimpleEntryMode.jsx
-- `SimpleEntryMode({ onSwitchToPro, onSaveData })` - 5-step wizard
-- Uses React Hook Form with Zod validation
-- Steps: Farm Basics → Inputs → Outputs → Manure → Review
-
-### /src/components/HighResolutionNutrientBudget.jsx
-- `HighResolutionNutrientBudget({ initialData, onSwitchToSimple })` - Pro mode dashboard
-- Manages KOUs and pathways state
-- Views: Overview, Pathways, Field Map, Scenarios
-
-### /src/components/SlurryValueCard.jsx
-- `SlurryValueCard({ kous, pathways })` - Economic value display
-- `calculateKOUBalance(kou, pathways)` - Sums nutrient flows
-- Uses FERTILISER_PRICES constants
-
-### /src/components/NutrientFlowSankey.jsx
-- `NutrientFlowSankey({ kous, pathways, nutrient })` - Sankey diagram
-- Handles special nodes (atmosphere) not in KOU list
-- Prevents circular references
-
-### /src/data/kouStructure.js
-- `createKOU(type, id, name, properties)` - KOU factory
-- `createPathway(from, to, type, nutrients)` - Pathway factory
-- `createFarmKOUStructure(farmData)` - Generates default farm
-- `calculateKOUBalance(kou, pathways)` - Nutrient balance calc
-
-### /src/utils/dataTransformers.js
-- `transformToKOUs(simpleData)` - Converts wizard data → KOU structure
-Returns: `{ kous: Object, pathways: Array }`
-
-### /src/utils/simpleCalculations.js
-- `calculateSimpleBalance(formData)` - Simple mode calculations
-Returns: `{ totalInputs, totalOutputs, balance, nvzCompliant, nEfficiency }`
-
-### /src/schemas/simpleEntrySchema.js
-- Zod schemas for form validation
-- DEFAULT_NUTRIENT_CONTENTS - Feed/fertilizer nutrient percentages
-- DEFAULT_FORM_VALUES - Pre-filled demo data
-
-### /src/constants/prices.js
-- FERTILISER_PRICES: { N: 0.85, P: 1.45, K: 0.70, S: 0.25 } £/kg
-
-## Component Connections (ASCII)
+#### src/utils/simpleCalculations.js
+```javascript
+calculateSimpleBalance(formData) → {
+  totalInputs: {N, P, K, S},      // kg
+  effectiveInputs: {N, P, K, S},  // kg after availability
+  totalOutputs: {N, P, K, S},     // kg
+  manureNutrients: {N, P},        // kg
+  balance: {N, P, K, S},          // kg (inputs - outputs)
+  organicNPerHa: number,          // kg N/ha
+  nvzCompliant: boolean,          // <= 170 kg N/ha
+  nEfficiency: number,            // % (outputs/effective inputs)
+  pEfficiency: number,            // % (outputs/inputs)
+  estimatedLosses: {N, P},        // kg
+  estimatedManureProduction: {N, P}, // kg
+  mortalityRetention: {N, P}      // kg
+}
 ```
-                    App.jsx
-                      |
-          +-----------+-----------+
-          |                       |
-    SimpleEntryMode        HighResolutionNutrientBudget
-          |                       |
-          |                  +----+----+----+----+
-    InputRow.jsx             |    |    |    |    |
-          |            SlurryValueCard |    |    |
-    transformToKOUs          |         |    |    |
-          |           NutrientFlowSankey    |    |
-          |                  |              |    |
-          |          NutrientPathwaysView   |    |
-          |                  |              |    |
-          |            FarmNutrientMap      |    |
-          |                  |              |    |
-          |            ScenarioPlanning     |    |
-          |                  |                   |
-          |             DataManagement-----------+
-          |                  |
-          +------------------+
-                   |
-              kouStructure.js
-              (shared data model)
+
+Key calculations:
+- CP to N conversion: CP ÷ 6.25
+- Protein to N conversion: protein × 0.16
+- Milk N: litres × (proteinPct/100) × 0.16
+- Effective N: amount × N% × availability
+- Mortality N retention: deadCows × 650kg × 0.03
+
+#### src/utils/ghgEstimation.js
+```javascript
+estimateGHGfromNUE(nue, system) → {
+  estimate: number,               // kg CO2e/kg milk
+  lower: number,                  // 95% CI lower
+  upper: number,                  // 95% CI upper
+  r_squared: number,              // model fit
+  rmse: number                    // prediction error
+}
+```
+
+Regression coefficients by system:
+- Grazing: y = -0.0049x + 1.3845 (R² = 0.2145)
+- Housed: y = -0.0058x + 1.4823 (R² = 0.3289)
+- Mixed: y = -0.0053x + 1.4287 (R² = 0.2612)
+
+#### src/utils/systemCalculations.js
+```javascript
+calculateSystemBalance(kous, pathways) → {
+  inputs: {N, P, K, S},           // kg
+  outputs: {N, P, K, S},          // kg
+  internal: {N, P, K, S},         // kg
+  losses: {N, P, K, S},           // kg
+  balance: {N, P, K, S},          // kg
+  nEfficiency: number,            // %
+  kouBalances: Map                // per-KOU balances
+}
+```
+
+#### src/utils/dataTransformers.js
+```javascript
+transformToKOUs(simpleData) → {
+  kous: {[id]: KOU},              // KOU objects
+  pathways: [Pathway]             // nutrient flows
+}
+```
+
+Creates:
+- Farm and field KOUs
+- Livestock groups (milking, youngstock)
+- Feed and manure stores
+- External suppliers/customers
+- Nutrient pathways between KOUs
+
+### Component Hierarchy
+
+```
+App.jsx
+├── SimpleEntry/SimpleEntryMode.jsx
+│   ├── InputRow.jsx
+│   ├── InlineInputRow.jsx
+│   └── GHGIndicator.jsx
+└── HighResolutionNutrientBudget.jsx (Pro Mode)
+    ├── KOUManager.jsx
+    ├── PathwayManager.jsx
+    ├── BalanceOverview.jsx
+    ├── SankeyDiagram.jsx
+    └── ScenarioPlanning.jsx
+```
+
+### ASCII Connection Map
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         USER INTERFACE                            │
+├─────────────────┬───────────────────────────────────────────────┤
+│  SimpleEntry    │              Pro Mode                          │
+│  ┌──────────┐   │  ┌────────────┐  ┌──────────────┐            │
+│  │ 5 Steps  │   │  │KOU Manager │  │Pathway Mgr   │            │
+│  │ Wizard   │   │  └──────┬─────┘  └───────┬──────┘            │
+│  └─────┬────┘   │         │                 │                   │
+│        │        │         ▼                 ▼                   │
+│        │        │  ┌────────────────────────────┐               │
+│        │        │  │   KOU/Pathway Structure    │               │
+│        │        │  └────────────┬───────────────┘               │
+│        │        │               │                               │
+├────────┼────────┴───────────────┼───────────────────────────────┤
+│        ▼                        ▼                               │
+│  ┌─────────────┐         ┌──────────────┐                      │
+│  │simpleCalcs  │         │systemCalcs   │                      │
+│  └──────┬──────┘         └──────┬───────┘                      │
+│         │                        │                              │
+│         ▼                        ▼                              │
+│  ┌─────────────────────────────────────┐                       │
+│  │        Nutrient Balance Results      │                       │
+│  │  • NUE/PUE Efficiency               │                       │
+│  │  • NVZ Compliance                   │                       │
+│  │  • GHG Estimation                   │                       │
+│  └─────────────────────────────────────┘                       │
+└─────────────────────────────────────────────────────────────────┘
+
+Data Flow:
+1. Simple Entry → Form Data → simpleCalculations → Results
+2. Simple Entry → dataTransformers → KOU/Pathways → Pro Mode
+3. Pro Mode → KOU/Pathways → systemCalculations → Results
 ```
 
 ## Code Style Guide
-- Functional components with hooks
-- Prop destructuring in parameters
-- useMemo for expensive calculations
-- Tailwind for styling (no CSS files)
-- Error boundaries for graceful failures
-- Lazy loading for code splitting
-- Accessibility: proper labels, ARIA, keyboard nav
 
-## Data Formats
-- localStorage: JSON with schemaVersion
-- Nutrient units: kg (except feed in tonnes)
-- Monetary: GBP (£)
-- Area: hectares
-- Volume: m³ (slurry)
-- All nutrient objects: { N, P, K, S }
+1. **React Components**: Functional components with hooks
+2. **State Management**: useState, useReducer for complex state
+3. **Validation**: Zod schemas with react-hook-form
+4. **Styling**: Tailwind CSS utility classes
+5. **Icons**: Lucide React icons
+6. **Calculations**: Pure functions, no side effects
+7. **Units**: SI units internally (kg, m³), display units vary
 
-## Current State Analysis
-**Strengths:**
-- Clean separation between Simple/Pro modes
-- Reusable calculation engine
-- Type-safe with Zod validation
-- Good performance (code splitting, memoization)
-- Accessible form components
+## Design Decisions
 
-**Technical Debt:**
-- Some components >300 lines (consider splitting)
-- Hardcoded IDs in example pathways
-- No unit tests
-- Limited error recovery in Sankey
+1. **N-Availability Factors**: Essential for accurate NUE calculation
+   - Mineral fertilizers: 100%
+   - Slurry: 35-50% (default 45%)
+   - FYM: 10-25%
+   - Organic fertilizers: 10-35%
 
-**Extension Points:**
-- Additional economic cards (per-field ROI, scenario costing)
-- API integration for prices
-- Multi-farm support
-- Historical tracking
-- Mobile app wrapper
+2. **Protein to N Conversion**:
+   - CP to N: CP ÷ 6.25 (industry standard)
+   - Protein to N: protein × 0.16 (milk protein)
+
+3. **Mortality Retention**: Nutrients retained on-farm from dead animals
+   - N: deadCows × 650kg × 3%
+   - P: deadCows × 650kg × 0.7%
+
+4. **GHG Proxy**: NUE-based regression from literature
+   - Simple, validated approach
+   - System-specific coefficients
+   - Includes uncertainty bounds
+
+5. **Milk Units**: Changed from tonnes to litres
+   - More intuitive for farmers
+   - Automatic per-cow calculations
+   - Density conversion handled internally
+
+6. **Two-Mode Architecture**:
+   - Simple: Wizard-based, aggregated data
+   - Pro: KOU-based, detailed pathways
+   - Seamless transition between modes
+
+## Recent Updates
+
+1. Added milk composition fields (fat%, protein%)
+2. Implemented veterinary consultant feedback:
+   - CP labeling as dry matter basis
+   - Forage type selector with defaults
+   - Fertilizer type dropdown
+   - N-availability tracking
+   - PUE calculation display
+   - Mortality percentage field
+3. Changed milk units from tonnes to litres
+4. Created experimental fork for UI testing
+5. Integrated GHG estimation throughout
 
 ## Deployment
-- Vercel deployment with automatic builds
-- Environment: Vite production build
-- Bundle size: ~493KB (152KB gzipped)
+
+- Production: nutrient-data-advanced.vercel.app
+- Experimental: nutrient-data-experimental.vercel.app
+- GitHub: Single repository (no fork yet)
+- Framework: React 18 + Vite
+- Hosting: Vercel

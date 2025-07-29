@@ -71,7 +71,12 @@ export function transformToKOUs(simpleData) {
   
   // Create outputs
   const milkOutputId = 'milk_output';
-  kous[milkOutputId] = createKOU(KOU_TYPES.OUTPUT, milkOutputId, 'Milk Sales', {});
+  // Find milk output to get fat and protein percentages
+  const milkOutput = outputs.find(o => o.type === 'milk');
+  kous[milkOutputId] = createKOU(KOU_TYPES.OUTPUT, milkOutputId, 'Milk Sales', {
+    fatPct: milkOutput?.fatPct || 4.1,
+    proteinPct: milkOutput?.proteinPct || 3.3
+  });
   
   const livestockSalesId = 'livestock_sales';
   kous[livestockSalesId] = createKOU(KOU_TYPES.OUTPUT, livestockSalesId, 'Livestock Sales', {});
@@ -132,19 +137,22 @@ export function transformToKOUs(simpleData) {
   outputs.forEach((output) => {
     if (output.amount > 0) {
       const amount = output.amount;
-      const multiplier = output.type === 'milk' ? 1000 : 1; // tonnes to kg for milk
       
       let nutrients;
       if (output.type === 'milk') {
-        // Calculate milk N from CP% and fixed P
-        const milkCPpct = farmInfo.milkCPpct || 3.2;
+        // Milk is now in litres/year
+        // Calculate milk N from protein % (protein contains 16% N)
+        const proteinPct = output.proteinPct || 3.3;
+        const milkLitres = amount; // already in litres
+        const milkProteinKg = milkLitres * (proteinPct / 100);
         nutrients = {
-          N: amount * 1000 * (milkCPpct / 100) * 0.16, // CP to N conversion
-          P: amount * 1000 * 0.0009, // 0.9 g/L
+          N: milkProteinKg * 0.16, // 16% N in protein
+          P: milkLitres * 0.0009, // 0.9 g/L
           K: 0,
           S: 0,
         };
       } else {
+        const multiplier = 1; // kg for livestock
         nutrients = {
           N: (amount * multiplier * (output.nContent || 0)) / 100,
           P: (amount * multiplier * (output.pContent || 0)) / 100,

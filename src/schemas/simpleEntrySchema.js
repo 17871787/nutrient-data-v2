@@ -30,9 +30,15 @@ export const simpleEntrySchema = z.object({
   inputs: z.array(z.object({
     source: z.enum(['concentrate', 'silage', 'hay', 'straw', 'fertiliser_N', 'fertiliser_P', 'fertiliser_compound']),
     label: z.string(),
+    forageType: z.string().optional(), // For forages only
+    fertilizerType: z.string().optional(), // For fertilizers only
     amount: z.number().nonnegative('Amount cannot be negative'),
+    feedMode: z.enum(['annual', 'perL', 'perCowDay']).optional().default('perL'), // For feeds only
+    feedRate: z.number().nonnegative().optional(), // Multi-purpose: kg/L milk or kg/cow/day depending on feedMode
+    dmPct: z.number().min(0).max(100, 'DM% must be between 0-100%').optional().default(88), // Dry matter %
     cpContent: z.number().min(0).max(50, 'CP content must be between 0-50%').optional(),
     nContent: z.number().min(0).max(100, 'N content must be between 0-100%').optional(),
+    availabilityN: z.number().min(0).max(1).optional(), // N-availability factor (0-1)
     pContent: z.number().min(0).max(100, 'P content must be between 0-100%'),
     kContent: z.number().min(0).max(100, 'K content must be between 0-100%').optional(),
     sContent: z.number().min(0).max(100, 'S content must be between 0-100%').optional(),
@@ -42,6 +48,8 @@ export const simpleEntrySchema = z.object({
     type: z.enum(['milk', 'livestock']),
     label: z.string(),
     amount: z.number().nonnegative('Amount cannot be negative'),
+    fatPct: z.number().min(2).max(6).optional(), // % butter-fat (milk only)
+    proteinPct: z.number().min(2).max(5).optional(), // % true protein (milk only)
     nContent: z.number().min(0).max(10, 'N content seems too high'),
     pContent: z.number().min(0).max(10, 'P content seems too high'),
   })),
@@ -56,6 +64,10 @@ export const simpleEntrySchema = z.object({
     slurryPContent: z.number()
       .min(0)
       .max(5, 'P content must be between 0-5 kg/m³'),
+    slurryAvailabilityN: z.number()
+      .min(0)
+      .max(1, 'Availability must be between 0-1')
+      .default(0.45),
     slurryImported: z.number()
       .nonnegative('Import volume cannot be negative')
       .max(10000, 'Import volume seems too large')
@@ -85,7 +97,7 @@ export const simpleEntrySchema = z.object({
 
 // Default values for common feeds and fertilizers
 export const DEFAULT_NUTRIENT_CONTENTS = {
-  concentrate: { cp: 18.0, n: 2.88, p: 0.5, k: 0.5, s: 0.2 },
+  concentrate: { cp: 15.84, n: 2.88, p: 0.5, k: 0.5, s: 0.2 }, // CP as fed (18% DM * 0.88)
   silage: { cp: 14.0, n: 2.24, p: 0.06, k: 0.35, s: 0.03 },
   hay: { cp: 11.0, n: 1.76, p: 0.25, k: 2.0, s: 0.15 },
   straw: { cp: 3.5, n: 0.56, p: 0.08, k: 1.2, s: 0.08 },
@@ -108,7 +120,10 @@ export const DEFAULT_FORM_VALUES = {
     { 
       source: 'concentrate', 
       label: 'Dairy Concentrates', 
-      amount: 350, 
+      amount: 350,
+      feedMode: 'perL',
+      feedRate: 0.243,
+      dmPct: 88,
       cpContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.cp,
       nContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.n,
       pContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.p,
@@ -128,7 +143,9 @@ export const DEFAULT_FORM_VALUES = {
     { 
       source: 'fertiliser_N', 
       label: 'Nitrogen Fertiliser', 
-      amount: 8500, 
+      amount: 8500,
+      fertilizerType: 'ammonium_nitrate',
+      availabilityN: 1.0,
       nContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.n,
       pContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.p,
       kContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.k,
@@ -136,13 +153,14 @@ export const DEFAULT_FORM_VALUES = {
     },
   ],
   outputs: [
-    { type: 'milk', label: 'Milk Sales', amount: 1440, nContent: 0.53, pContent: 0.09 },
+    { type: 'milk', label: 'Milk Sales', amount: 1440000, fatPct: 4.1, proteinPct: 3.3, nContent: 0.53, pContent: 0.09 }, // litres/year
     { type: 'livestock', label: 'Cull Cows', amount: 12000, nContent: 2.5, pContent: 0.7 },
   ],
   manure: {
     slurryApplied: 4200,
     slurryNContent: 2.5,
     slurryPContent: 0.5,
+    slurryAvailabilityN: 0.45,
     slurryImported: 0,
     slurryImportedNContent: 2.5,
     slurryImportedPContent: 0.5,

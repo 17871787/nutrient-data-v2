@@ -10,6 +10,14 @@ export function calculateSimpleBalance(formData) {
     S: 0,
   };
   
+  // Calculate effective N inputs (considering availability)
+  const effectiveInputs = {
+    N: 0,
+    P: 0,
+    K: 0,
+    S: 0,
+  };
+  
   // Sum up feed and fertilizer inputs
   inputs.forEach(input => {
     const amount = input.amount || 0;
@@ -21,10 +29,22 @@ export function calculateSimpleBalance(formData) {
       nContent = (input.cpContent || 0) / 6.25;
     }
     
-    totalInputs.N += (amount * multiplier * nContent) / 100;
-    totalInputs.P += (amount * multiplier * (input.pContent || 0)) / 100;
-    totalInputs.K += (amount * multiplier * (input.kContent || 0)) / 100;
-    totalInputs.S += (amount * multiplier * (input.sContent || 0)) / 100;
+    const nAmount = (amount * multiplier * nContent) / 100;
+    const pAmount = (amount * multiplier * (input.pContent || 0)) / 100;
+    const kAmount = (amount * multiplier * (input.kContent || 0)) / 100;
+    const sAmount = (amount * multiplier * (input.sContent || 0)) / 100;
+    
+    totalInputs.N += nAmount;
+    totalInputs.P += pAmount;
+    totalInputs.K += kAmount;
+    totalInputs.S += sAmount;
+    
+    // Calculate effective N based on availability
+    const nAvailability = input.availabilityN !== undefined ? input.availabilityN : 1.0;
+    effectiveInputs.N += nAmount * nAvailability;
+    effectiveInputs.P += pAmount; // P availability not tracked yet
+    effectiveInputs.K += kAmount;
+    effectiveInputs.S += sAmount;
   });
   
   // Calculate total outputs
@@ -35,21 +55,27 @@ export function calculateSimpleBalance(formData) {
     S: 0,
   };
   
+  
   // Sum up milk and livestock outputs
   outputs.forEach(output => {
     const amount = output.amount || 0;
-    const multiplier = output.type === 'milk' ? 1000 : 1; // tonnes to kg for milk, kg for livestock
     
     if (output.type === 'milk') {
-      // Calculate milk N from CP% (CP / 6.25)
-      const milkCPpct = farmInfo.milkCPpct || 3.2;
-      const milkN = amount * 1000 * (milkCPpct / 100) * 0.16; // tonnes -> kg, CP% -> N
-      const milkP = amount * 1000 * 0.0009; // 0.9 g/L = 0.9 kg/m³
+      // Milk is now in litres/year
+      // Calculate milk N from protein % (protein contains 16% N)
+      const proteinPct = output.proteinPct || 3.3;
+      const milkLitres = amount; // already in litres
+      const milkProteinKg = milkLitres * (proteinPct / 100);
+      const milkN = milkProteinKg * 0.16; // 16% N in protein
+      const milkP = milkLitres * 0.0009; // 0.9 g/L
       totalOutputs.N += milkN;
       totalOutputs.P += milkP;
     } else {
-      totalOutputs.N += (amount * multiplier * (output.nContent || 0)) / 100;
-      totalOutputs.P += (amount * multiplier * (output.pContent || 0)) / 100;
+      // Livestock outputs
+      const livestockN = (amount * 1 * (output.nContent || 0)) / 100;
+      const livestockP = (amount * 1 * (output.pContent || 0)) / 100;
+      totalOutputs.N += livestockN;
+      totalOutputs.P += livestockP;
     }
   });
   
@@ -71,6 +97,12 @@ export function calculateSimpleBalance(formData) {
   totalOutputs.N += manureExportedN;
   totalOutputs.P += manureExportedP;
   
+  // Calculate effective manure N with availability
+  const slurryAvailability = manure.slurryAvailabilityN !== undefined ? manure.slurryAvailabilityN : 0.45;
+  const effectiveManureN = manureImportedN * slurryAvailability;
+  effectiveInputs.N += effectiveManureN;
+  effectiveInputs.P += manureImportedP;
+  
   // Net manure N for NVZ calculation
   const manureN = manureAppliedN + manureImportedN - manureExportedN;
   const manureP = manureAppliedP + manureImportedP - manureExportedP;
@@ -88,8 +120,8 @@ export function calculateSimpleBalance(formData) {
     S: totalInputs.S - totalOutputs.S,
   };
   
-  // Calculate efficiency
-  const nEfficiency = totalInputs.N > 0 ? (totalOutputs.N / totalInputs.N) * 100 : 0;
+  // Calculate efficiency using effective N for NUE
+  const nEfficiency = effectiveInputs.N > 0 ? (totalOutputs.N / effectiveInputs.N) * 100 : 0;
   const pEfficiency = totalInputs.P > 0 ? (totalOutputs.P / totalInputs.P) * 100 : 0;
   
   // Calculate manure production based on livestock numbers
@@ -106,6 +138,7 @@ export function calculateSimpleBalance(formData) {
   
   return {
     totalInputs,
+    effectiveInputs,
     totalOutputs,
     manureNutrients: { N: manureN, P: manureP },
     balance,

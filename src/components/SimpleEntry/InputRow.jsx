@@ -92,6 +92,7 @@ export function InlineInputRow({
   field, 
   errors,
   width = 'w-20',
+  helpText = null,
   ...inputProps 
 }) {
   const getFieldError = (field, errors) => {
@@ -109,7 +110,13 @@ export function InlineInputRow({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <label htmlFor={inputId} className="text-xs text-gray-600">{label}</label>
+      <label 
+        htmlFor={inputId} 
+        className="text-xs text-gray-600 cursor-help"
+        title={helpText}
+      >
+        {label}
+      </label>
       <div className="relative">
         <input
           id={inputId}

@@ -21,6 +21,7 @@ import { simpleEntrySchema, DEFAULT_FORM_VALUES, DEFAULT_NUTRIENT_CONTENTS } fro
 import { InputRow, InlineInputRow } from './InputRow';
 import { calculateSimpleBalance } from '../../utils/simpleCalculations';
 import { transformToKOUs } from '../../utils/dataTransformers';
+import GHGIndicator from '../GHGIndicator';
 
 const STEPS = [
   { id: 'farm', label: 'Farm Basics', icon: Tractor },
@@ -29,6 +30,28 @@ const STEPS = [
   { id: 'manure', label: 'Manure & Losses', icon: Droplets },
   { id: 'review', label: 'Review & Save', icon: BarChart3 },
 ];
+
+// Forage type defaults with CP% on DM basis
+const FORAGE_DEFAULTS = {
+  'grass_silage': { label: 'Grass Silage', cp: 14 },
+  'grazed_grass': { label: 'Grazed Grass', cp: 22 },
+  'wholecrop_cereal': { label: 'Whole-crop Cereal Silage', cp: 8 },
+  'maize_silage': { label: 'Maize Silage', cp: 8 },
+  'hay': { label: 'Hay', cp: 11 },
+  'straw': { label: 'Straw', cp: 3.5 }
+};
+
+// Fertilizer type defaults with N-availability factors
+const FERTILIZER_TYPES = {
+  'ammonium_nitrate': { label: 'Ammonium Nitrate (34.5% N)', n: 34.5, availabilityN: 1.0 },
+  'urea': { label: 'Urea (46% N)', n: 46, availabilityN: 1.0 },
+  'uan': { label: 'UAN Solution (28-32% N)', n: 30, availabilityN: 1.0 },
+  'chicken_litter': { label: 'Chicken Litter', n: 3.5, availabilityN: 0.35 },
+  'composted_fym': { label: 'Composted FYM', n: 0.6, availabilityN: 0.1 },
+  'fresh_fym': { label: 'Fresh FYM', n: 0.6, availabilityN: 0.25 },
+  'biosolids': { label: 'Biosolids/Sewage Sludge', n: 4.5, availabilityN: 0.15 },
+  'custom': { label: 'Custom/Other', n: 0, availabilityN: 1.0 }
+};
 
 export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -41,6 +64,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
     formState: { errors },
     trigger,
     getValues,
+    setValue,
   } = useForm({
     resolver: zodResolver(simpleEntrySchema),
     defaultValues: DEFAULT_FORM_VALUES,
@@ -240,26 +264,254 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Feed & Fertiliser Inputs</h2>
             
             <div className="space-y-4">
-              {inputFields.map((field, index) => (
-                <div key={field.id} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-gray-700">{field.label}</h3>
-                    <button
-                      type="button"
-                      onClick={() => removeInput(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  <InputRow
-                    label="Amount"
-                    unit={field.source.includes('fertiliser') ? 'kg/yr' : 't/yr'}
-                    register={register}
-                    field={`inputs.${index}.amount`}
-                    errors={errors}
-                  />
+              {inputFields.map((field, index) => {
+                const isForage = ['silage', 'hay', 'straw'].includes(field.source);
+                const isFertiliser = field.source.includes('fertiliser');
+                
+                return (
+                  <div key={field.id} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-gray-700">{field.label}</h3>
+                      <button
+                        type="button"
+                        onClick={() => removeInput(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {/* Forage type selector for forages */}
+                    {isForage && (
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Forage Type
+                        </label>
+                        <select
+                          {...register(`inputs.${index}.forageType`)}
+                          onChange={(e) => {
+                            const forageType = e.target.value;
+                            if (forageType && FORAGE_DEFAULTS[forageType]) {
+                              const cpDefault = FORAGE_DEFAULTS[forageType].cp;
+                              setValue(`inputs.${index}.cpContent`, cpDefault);
+                              setValue(`inputs.${index}.nContent`, cpDefault / 6.25);
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        >
+                          <option value="">Select forage type...</option>
+                          {Object.entries(FORAGE_DEFAULTS).map(([key, forage]) => (
+                            <option key={key} value={key}>{forage.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    
+                    {/* Feed mode toggle for concentrates */}
+                    {field.source === 'concentrate' && (
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Input Mode
+                        </label>
+                        <div className="flex gap-2 text-sm">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue(`inputs.${index}.feedMode`, 'perL');
+                              // Convert from current mode to perL
+                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
+                              const amount = watch(`inputs.${index}.amount`) || 0;
+                              const cows = watch('farmInfo.milkingCows') || 0;
+                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
+                              const milkL = milkOutput?.amount || 0;
+                              
+                              if (currentMode === 'annual' && milkL > 0) {
+                                setValue(`inputs.${index}.feedRate`, (amount * 1000) / milkL);
+                              } else if (currentMode === 'perCowDay' && milkL > 0 && cows > 0) {
+                                const feedRate = watch(`inputs.${index}.feedRate`) || 0;
+                                const annualT = feedRate * cows * 365 / 1000;
+                                setValue(`inputs.${index}.feedRate`, (annualT * 1000) / milkL);
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-md ${
+                              (watch(`inputs.${index}.feedMode`) === 'perL' || !watch(`inputs.${index}.feedMode`))
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            kg per L milk
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue(`inputs.${index}.feedMode`, 'perCowDay');
+                              // Convert from current mode to perCowDay
+                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
+                              const amount = watch(`inputs.${index}.amount`) || 0;
+                              const cows = watch('farmInfo.milkingCows') || 0;
+                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
+                              const milkL = milkOutput?.amount || 0;
+                              
+                              if (currentMode === 'annual' && cows > 0) {
+                                setValue(`inputs.${index}.feedRate`, (amount * 1000) / (cows * 365));
+                              } else if (currentMode === 'perL' && cows > 0 && milkL > 0) {
+                                const feedRate = watch(`inputs.${index}.feedRate`) || 0;
+                                const annualT = feedRate * milkL / 1000;
+                                setValue(`inputs.${index}.feedRate`, (annualT * 1000) / (cows * 365));
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-md ${
+                              watch(`inputs.${index}.feedMode`) === 'perCowDay'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            kg per cow day
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue(`inputs.${index}.feedMode`, 'annual');
+                              // Convert from current mode to annual
+                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
+                              const feedRate = watch(`inputs.${index}.feedRate`) || 0;
+                              const cows = watch('farmInfo.milkingCows') || 0;
+                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
+                              const milkL = milkOutput?.amount || 0;
+                              
+                              let annualT = 0;
+                              if (currentMode === 'perL' && milkL > 0) {
+                                annualT = feedRate * milkL / 1000;
+                              } else if (currentMode === 'perCowDay' && cows > 0) {
+                                annualT = feedRate * cows * 365 / 1000;
+                              }
+                              
+                              if (annualT > 0) {
+                                setValue(`inputs.${index}.amount`, annualT);
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-md ${
+                              watch(`inputs.${index}.feedMode`) === 'annual'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            t per year
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Amount input - changes based on mode */}
+                    {field.source === 'concentrate' ? (
+                      (() => {
+                        const feedMode = watch(`inputs.${index}.feedMode`) || 'perL';
+                        const cows = watch('farmInfo.milkingCows') || 0;
+                        const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
+                        const milkL = milkOutput?.amount || 0;
+                        const feedRate = watch(`inputs.${index}.feedRate`) || 0;
+                        const amount = watch(`inputs.${index}.amount`) || 0;
+                        
+                        // Calculate conversions for helper text
+                        let annualT = 0;
+                        if (feedMode === 'perL' && milkL > 0) {
+                          annualT = feedRate * milkL / 1000;
+                        } else if (feedMode === 'perCowDay' && cows > 0) {
+                          annualT = feedRate * cows * 365 / 1000;
+                        } else if (feedMode === 'annual') {
+                          annualT = amount;
+                        }
+                        
+                        const perL = milkL > 0 ? (annualT * 1000) / milkL : 0;
+                        const perCowDay = cows > 0 ? (annualT * 1000) / (cows * 365) : 0;
+                        
+                        return (
+                          <div>
+                            {feedMode === 'perL' ? (
+                              <InputRow
+                                label="Feed Rate"
+                                unit="kg/L milk"
+                                register={register}
+                                field={`inputs.${index}.feedRate`}
+                                errors={errors}
+                                step="0.001"
+                                helpText="kg of feed per litre of milk (e.g., 0.30 = 300g concentrate per litre sold)"
+                                onChange={(e) => {
+                                  const rate = parseFloat(e.target.value) || 0;
+                                  if (milkL > 0) {
+                                    setValue(`inputs.${index}.amount`, rate * milkL / 1000);
+                                  }
+                                }}
+                              />
+                            ) : feedMode === 'perCowDay' ? (
+                              <InputRow
+                                label="Feed Rate"
+                                unit="kg/cow/day"
+                                register={register}
+                                field={`inputs.${index}.feedRate`}
+                                errors={errors}
+                                step="0.1"
+                                helpText="Daily concentrate feeding rate per cow"
+                                onChange={(e) => {
+                                  const rate = parseFloat(e.target.value) || 0;
+                                  if (cows > 0) {
+                                    setValue(`inputs.${index}.amount`, rate * cows * 365 / 1000);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <InputRow
+                                label="Amount"
+                                unit="t/yr"
+                                register={register}
+                                field={`inputs.${index}.amount`}
+                                errors={errors}
+                                helpText="Total annual concentrate usage"
+                              />
+                            )}
+                            
+                            {/* Conversion helper text */}
+                            <p className="text-xs text-gray-500 mt-1 ml-40">
+                              = {annualT.toFixed(0)} t/yr • {perCowDay.toFixed(1)} kg/cow/day • {perL.toFixed(3)} kg/L milk
+                            </p>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <InputRow
+                        label="Amount"
+                        unit={isFertiliser ? 'kg/yr' : 't/yr'}
+                        register={register}
+                        field={`inputs.${index}.amount`}
+                        errors={errors}
+                      />
+                    )}
+                    
+                    {/* Fertilizer type selector */}
+                    {isFertiliser && (
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Fertilizer Type
+                        </label>
+                        <select
+                          {...register(`inputs.${index}.fertilizerType`)}
+                          onChange={(e) => {
+                            const fertType = e.target.value;
+                            if (fertType && FERTILIZER_TYPES[fertType]) {
+                              const fert = FERTILIZER_TYPES[fertType];
+                              setValue(`inputs.${index}.nContent`, fert.n);
+                              setValue(`inputs.${index}.availabilityN`, fert.availabilityN);
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        >
+                          <option value="">Select fertilizer type...</option>
+                          {Object.entries(FERTILIZER_TYPES).map(([key, fert]) => (
+                            <option key={key} value={key}>{fert.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   
                   <div className="flex gap-4 mt-3">
                     {field.source.includes('fertiliser') ? (
@@ -289,14 +541,59 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                           errors={errors}
                         />
                       </>
-                    ) : (
+                    ) : field.source === 'concentrate' ? (
                       <>
                         <InlineInputRow
-                          label="CP % DM"
+                          label="DM %"
+                          register={register}
+                          field={`inputs.${index}.dmPct`}
+                          errors={errors}
+                          helpText="Dry matter %"
+                          onChange={(e) => {
+                            // Recalculate CP on DM basis when DM% changes
+                            const dmPct = parseFloat(e.target.value) || 88;
+                            const cpAsFed = watch(`inputs.${index}.cpContent`) || 0;
+                            const cpDM = dmPct > 0 ? cpAsFed / (dmPct / 100) : 0;
+                            const nPct = cpDM / 6.25;
+                            setValue(`inputs.${index}.nContent`, nPct);
+                          }}
+                        />
+                        <InlineInputRow
+                          label="CP % (as fed)"
                           register={register}
                           field={`inputs.${index}.cpContent`}
                           errors={errors}
-                          helpText="Crude Protein %"
+                          helpText="CP% in feed as fed"
+                          onChange={(e) => {
+                            // Calculate N% from CP as fed and DM%
+                            const cpAsFed = parseFloat(e.target.value) || 0;
+                            const dmPct = watch(`inputs.${index}.dmPct`) || 88;
+                            const cpDM = dmPct > 0 ? cpAsFed / (dmPct / 100) : 0;
+                            const nPct = cpDM / 6.25;
+                            setValue(`inputs.${index}.nContent`, nPct);
+                          }}
+                        />
+                        <InlineInputRow
+                          label="P %"
+                          register={register}
+                          field={`inputs.${index}.pContent`}
+                          errors={errors}
+                        />
+                        <InlineInputRow
+                          label="K %"
+                          register={register}
+                          field={`inputs.${index}.kContent`}
+                          errors={errors}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <InlineInputRow
+                          label="CP % (DM)"
+                          register={register}
+                          field={`inputs.${index}.cpContent`}
+                          errors={errors}
+                          helpText="Crude Protein % on 100% dry matter basis"
                         />
                         <InlineInputRow
                           label="P %"
@@ -319,8 +616,31 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                       </>
                     )}
                   </div>
+                  
+                  {/* N-availability field for fertilizers */}
+                  {isFertiliser && (
+                    <div className="mt-3">
+                      <InputRow
+                        label="N Availability"
+                        unit="%"
+                        register={register}
+                        field={`inputs.${index}.availabilityN`}
+                        errors={errors}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        helpText="Percentage of N available in first season (0-100%)"
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          setValue(`inputs.${index}.availabilityN`, value / 100);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex flex-wrap gap-2 mt-4">
@@ -357,26 +677,65 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Farm Outputs</h2>
             
-            {outputFields.map((field, index) => (
-              <div key={field.id} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-700 mb-3">{field.label}</h3>
+            {outputFields.map((field, index) => {
+              const milkingCows = watch('farmInfo.milkingCows') || 1;
+              const milkAmount = field.type === 'milk' ? watch(`outputs.${index}.amount`) || 0 : 0;
+              const litresPerCow = field.type === 'milk' && milkingCows > 0 ? Math.round(milkAmount / milkingCows) : 0;
+              
+              return (
+                <div key={field.id} className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-700 mb-3">{field.label}</h3>
+                  
+                  <InputRow
+                    label="Amount"
+                    unit={field.type === 'milk' ? 'litres/yr' : 'kg total'}
+                    register={register}
+                    field={`outputs.${index}.amount`}
+                    errors={errors}
+                    helpText={field.type === 'milk' ? 'Total annual milk production in litres' : 'Total weight of culled animals'}
+                  />
+                  
+                  {field.type === 'milk' && milkingCows > 0 && (
+                    <div className="mt-2 text-sm text-gray-600 ml-40">
+                      = {litresPerCow.toLocaleString()} litres/cow/year
+                    </div>
+                  )}
                 
-                <InputRow
-                  label="Amount"
-                  unit={field.type === 'milk' ? 'tonnes/yr' : 'kg total'}
-                  register={register}
-                  field={`outputs.${index}.amount`}
-                  errors={errors}
-                  helpText={field.type === 'milk' ? 'Total milk production in tonnes' : 'Total weight of culled animals'}
-                />
+                {field.type === 'milk' && (
+                  <div className="flex gap-4 mt-3">
+                    <InlineInputRow
+                      label="Butter-fat %"
+                      register={register}
+                      field={`outputs.${index}.fatPct`}
+                      errors={errors}
+                      helpText="Typical: 3.8-4.5%"
+                    />
+                    <InlineInputRow
+                      label="Protein %"
+                      register={register}
+                      field={`outputs.${index}.proteinPct`}
+                      errors={errors}
+                      helpText="Typical: 3.0-3.5%"
+                    />
+                  </div>
+                )}
                 
                 <div className="flex gap-4 mt-3">
-                  <InlineInputRow
-                    label="N %"
-                    register={register}
-                    field={`outputs.${index}.nContent`}
-                    errors={errors}
-                  />
+                  {field.type === 'milk' ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <label className="text-xs text-gray-600">N %</label>
+                      <div className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center bg-gray-100">
+                        {((watch(`outputs.${index}.proteinPct`) || 3.3) * 0.16).toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <InlineInputRow
+                      label="N %"
+                      register={register}
+                      field={`outputs.${index}.nContent`}
+                      errors={errors}
+                    />
+                  )}
                   <InlineInputRow
                     label="P %"
                     register={register}
@@ -385,7 +744,8 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                   />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         );
 
@@ -427,6 +787,22 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     helpText="Typical: 0.4-0.6 kg/m³"
                   />
                 </div>
+              </div>
+              
+              <div className="mt-4">
+                <InputRow
+                  label="N Availability"
+                  unit="%"
+                  register={register}
+                  field="manure.slurryAvailabilityN"
+                  errors={errors}
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="100"
+                  helpText="Percentage of slurry N available in first season (typical: 35-50%)"
+                  defaultValue={45}
+                />
               </div>
             </div>
             
@@ -568,23 +944,56 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             </div>
 
             {/* Farm Efficiency */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-700 mb-2">Nutrient Use Efficiency</h4>
-              <div className="space-y-2">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Nitrogen Efficiency</span>
-                    <span className="font-bold">{nutrientBalance.nEfficiency.toFixed(1)}%</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-700 mb-2">Nitrogen Use Efficiency (NUE)</h4>
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>N Efficiency</span>
+                      <span className="font-bold">{nutrientBalance.nEfficiency.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 transition-all duration-500"
+                        style={{ width: `${Math.min(nutrientBalance.nEfficiency, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Based on effective N inputs
+                    </p>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 transition-all duration-500"
-                      style={{ width: `${Math.min(nutrientBalance.nEfficiency, 100)}%` }}
-                    />
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-700 mb-2">Phosphorus Use Efficiency (PUE)</h4>
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>P Efficiency</span>
+                      <span className="font-bold">{nutrientBalance.pEfficiency.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-purple-500 transition-all duration-500"
+                        style={{ width: `${Math.min(nutrientBalance.pEfficiency, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      P outputs ÷ P inputs × 100
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* GHG Indicator */}
+            <GHGIndicator 
+              nue={nutrientBalance.nEfficiency} 
+              system="mixed"
+              showDetails={true}
+            />
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
@@ -615,6 +1024,16 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
+      {/* Debug banner */}
+      {new URLSearchParams(window.location.search).get('debug') === '1' && (
+        <div className="max-w-2xl mx-auto mb-4">
+          <details className="bg-gray-800 text-white p-4 rounded">
+            <summary className="cursor-pointer font-mono text-sm">Debug Data</summary>
+            <pre className="mt-2 text-xs overflow-auto">{JSON.stringify(watchedValues, null, 2)}</pre>
+          </details>
+        </div>
+      )}
+      
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Simple Nutrient Budget Entry</h1>
