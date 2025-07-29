@@ -61,6 +61,8 @@ export function ConcentrateInput({
           type="button"
           onClick={() => removeInput(index)}
           className="text-red-500 hover:text-red-700"
+          aria-label={`Remove ${concentrate ? 'concentrate' : 'forage'} input`}
+          title="Remove"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -215,6 +217,8 @@ export function ForageInput({
           type="button"
           onClick={() => removeInput(index)}
           className="text-red-500 hover:text-red-700"
+          aria-label={`Remove ${concentrate ? 'concentrate' : 'forage'} input`}
+          title="Remove"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -222,10 +226,11 @@ export function ForageInput({
       
       {/* Forage type selector */}
       <div className="mb-3">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={`forage-type-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
           Forage Type
         </label>
         <select
+          id={`forage-type-${index}`}
           {...register(`inputs.${index}.forageType`)}
           onChange={(e) => {
             const forageType = e.target.value;
@@ -236,6 +241,7 @@ export function ForageInput({
             }
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          aria-label="Select forage type"
         >
           <option value="">Select forage type...</option>
           {Object.entries(FORAGE_DEFAULTS).map(([key, forage]) => (

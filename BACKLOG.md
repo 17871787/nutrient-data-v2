@@ -11,9 +11,9 @@ Based on the Design Philosophy evaluation, here are 40 prioritized UI improvemen
 
 ## Color & Visual Refinement
 6. Replace harsh borders with subtle shadows [sophistication] **DONE – PR ac1cbda**
-7. Implement muted color palette for reduced eye strain [comfort] **DONE – PR pending**
-8. Add hover state color transitions (200ms) [feedback] **DONE – PR pending**
-9. Create focus states with subtle glow effects [accessibility] **DONE – PR pending**
+7. Implement muted color palette for reduced eye strain [comfort] **DONE – PR 622dac8**
+8. Add hover state color transitions (200ms) [feedback] **DONE – PR 622dac8**
+9. Create focus states with subtle glow effects [accessibility] **DONE – PR 622dac8**
 10. Desaturate success/error colors for elegance [restraint]
 
 ## Spacing & Layout

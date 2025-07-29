@@ -18,23 +18,28 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
   };
 
   // Input field component
-  const InputField = ({ label, value, onChange, type = 'number', unit, min, max, step = 1 }) => (
-    <div className="mb-3">
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <div className="flex items-center gap-2">
-        <input
-          type={type}
-          value={value || ''}
-          onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
-          className={`flex-1 px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
-          min={min}
-          max={max}
-          step={step}
-        />
-        {unit && <span className="text-sm text-gray-500">{unit}</span>}
+  const InputField = ({ label, value, onChange, type = 'number', unit, min, max, step = 1 }) => {
+    const inputId = `input-${label.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`;
+    return (
+      <div className="mb-3">
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="flex items-center gap-2">
+          <input
+            id={inputId}
+            type={type}
+            value={value || ''}
+            onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+            className={`flex-1 px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
+            min={min}
+            max={max}
+            step={step}
+            aria-label={label}
+          />
+          {unit && <span className="text-sm text-gray-500">{unit}</span>}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // KOU Editor
   const KOUEditor = ({ kou, onSave, onCancel }) => {
@@ -77,11 +82,13 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
             type="text"
           />
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label htmlFor="kou-type-select" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
+              id="kou-type-select"
               value={editedKOU.type}
               onChange={(e) => updateProperty('type', e.target.value)}
               className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
+              aria-label="KOU Type"
             >
               {Object.entries(KOU_TYPES).map(([key, value]) => (
                 <option key={key} value={value}>{key.replace(/_/g, ' ')}</option>
@@ -196,11 +203,13 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
       <div className="bg-gray-50 rounded-lg p-4 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">From KOU</label>
+            <label htmlFor="pathway-from-select" className="block text-sm font-medium text-gray-700 mb-1">From KOU</label>
             <select
+              id="pathway-from-select"
               value={editedPathway.from}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, from: e.target.value }))}
               className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
+              aria-label="Source KOU"
             >
               <option value="">Select KOU...</option>
               {Object.values(kous).map(kou => (
@@ -210,11 +219,13 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">To KOU</label>
+            <label htmlFor="pathway-to-select" className="block text-sm font-medium text-gray-700 mb-1">To KOU</label>
             <select
+              id="pathway-to-select"
               value={editedPathway.to}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, to: e.target.value }))}
               className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
+              aria-label="Destination KOU"
             >
               <option value="">Select KOU...</option>
               {Object.values(kous).map(kou => (
@@ -224,11 +235,13 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pathway Type</label>
+            <label htmlFor="pathway-type-select" className="block text-sm font-medium text-gray-700 mb-1">Pathway Type</label>
             <select
+              id="pathway-type-select"
               value={editedPathway.type}
               onChange={(e) => setEditedPathway(prev => ({ ...prev, type: e.target.value }))}
               className={`w-full px-3 py-1.5 ${getBorderOrShadow('input')} rounded-md focus:ring-2 focus:ring-blue-500`}
+              aria-label="Pathway Type"
             >
               {Object.entries(PATHWAY_TYPES).map(([key, value]) => (
                 <option key={key} value={value}>{key.replace(/_/g, ' ')}</option>
@@ -424,6 +437,8 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
+            aria-label="Close dialog"
+            title="Close"
           >
             <X className="w-6 h-6" />
           </button>
@@ -542,12 +557,16 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
                               <button
                                 onClick={() => setEditingItem({ type: 'kou', item: kou })}
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                aria-label={`Edit ${kou.name}`}
+                                title="Edit"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteKOU(kou.id)}
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                aria-label={`Delete ${kou.name}`}
+                                title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -611,12 +630,16 @@ const DataManagement = ({ kous, pathways, onUpdateKous, onUpdatePathways, onClos
                         <button
                           onClick={() => setEditingItem({ type: 'pathway', item: pathway, pathwayIndex: index })}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                          aria-label="Edit pathway"
+                          title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePathway(index)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          aria-label="Delete pathway"
+                          title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
