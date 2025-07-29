@@ -22,6 +22,8 @@ import { InputRow, InlineInputRow } from './InputRow';
 import { calculateSimpleBalance } from '../../utils/simpleCalculations';
 import { transformToKOUs } from '../../utils/dataTransformers';
 import GHGIndicator from '../GHGIndicator';
+import { ConcentrateInput, ForageInput } from '../FeedInputs';
+import { FertilizerInput } from '../InputsTab';
 
 const STEPS = [
   { id: 'farm', label: 'Farm Basics', icon: Tractor },
@@ -268,378 +270,73 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                 const isForage = ['silage', 'hay', 'straw'].includes(field.source);
                 const isFertiliser = field.source.includes('fertiliser');
                 
-                return (
-                  <div key={field.id} className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-gray-700">{field.label}</h3>
-                      <button
-                        type="button"
-                        onClick={() => removeInput(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    {/* Forage type selector for forages */}
-                    {isForage && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Forage Type
-                        </label>
-                        <select
-                          {...register(`inputs.${index}.forageType`)}
-                          onChange={(e) => {
-                            const forageType = e.target.value;
-                            if (forageType && FORAGE_DEFAULTS[forageType]) {
-                              const cpDefault = FORAGE_DEFAULTS[forageType].cp;
-                              setValue(`inputs.${index}.cpContent`, cpDefault);
-                              setValue(`inputs.${index}.nContent`, cpDefault / 6.25);
-                            }
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                // Use new components based on input type
+                if (field.source === 'concentrate') {
+                  return (
+                    <ConcentrateInput
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      register={register}
+                      errors={errors}
+                      watch={watch}
+                      setValue={setValue}
+                      removeInput={removeInput}
+                      farmData={watchedValues}
+                    />
+                  );
+                } else if (isForage) {
+                  return (
+                    <ForageInput
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      register={register}
+                      errors={errors}
+                      watch={watch}
+                      setValue={setValue}
+                      removeInput={removeInput}
+                      FORAGE_DEFAULTS={FORAGE_DEFAULTS}
+                    />
+                  );
+                } else if (isFertiliser) {
+                  return (
+                    <FertilizerInput
+                      key={field.id}
+                      index={index}
+                      field={field}
+                      register={register}
+                      errors={errors}
+                      watch={watch}
+                      setValue={setValue}
+                      removeInput={removeInput}
+                      FERTILIZER_TYPES={FERTILIZER_TYPES}
+                    />
+                  );
+                } else {
+                  // Default case for other input types
+                  return (
+                    <div key={field.id} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-medium text-gray-700">{field.label}</h3>
+                        <button
+                          type="button"
+                          onClick={() => removeInput(index)}
+                          className="text-red-500 hover:text-red-700"
                         >
-                          <option value="">Select forage type...</option>
-                          {Object.entries(FORAGE_DEFAULTS).map(([key, forage]) => (
-                            <option key={key} value={key}>{forage.label}</option>
-                          ))}
-                        </select>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                    )}
-                    
-                    {/* Feed mode toggle for concentrates */}
-                    {field.source === 'concentrate' && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Input Mode
-                        </label>
-                        <div className="flex gap-2 text-sm">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setValue(`inputs.${index}.feedMode`, 'perL');
-                              // Convert from current mode to perL
-                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
-                              const amount = watch(`inputs.${index}.amount`) || 0;
-                              const cows = watch('farmInfo.milkingCows') || 0;
-                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
-                              const milkL = milkOutput?.amount || 0;
-                              
-                              if (currentMode === 'annual' && milkL > 0) {
-                                setValue(`inputs.${index}.feedRate`, (amount * 1000) / milkL);
-                              } else if (currentMode === 'perCowDay' && milkL > 0 && cows > 0) {
-                                const feedRate = watch(`inputs.${index}.feedRate`) || 0;
-                                const annualT = feedRate * cows * 365 / 1000;
-                                setValue(`inputs.${index}.feedRate`, (annualT * 1000) / milkL);
-                              }
-                            }}
-                            className={`px-3 py-1 rounded-md ${
-                              (watch(`inputs.${index}.feedMode`) === 'perL' || !watch(`inputs.${index}.feedMode`))
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            kg per L milk
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setValue(`inputs.${index}.feedMode`, 'perCowDay');
-                              // Convert from current mode to perCowDay
-                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
-                              const amount = watch(`inputs.${index}.amount`) || 0;
-                              const cows = watch('farmInfo.milkingCows') || 0;
-                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
-                              const milkL = milkOutput?.amount || 0;
-                              
-                              if (currentMode === 'annual' && cows > 0) {
-                                setValue(`inputs.${index}.feedRate`, (amount * 1000) / (cows * 365));
-                              } else if (currentMode === 'perL' && cows > 0 && milkL > 0) {
-                                const feedRate = watch(`inputs.${index}.feedRate`) || 0;
-                                const annualT = feedRate * milkL / 1000;
-                                setValue(`inputs.${index}.feedRate`, (annualT * 1000) / (cows * 365));
-                              }
-                            }}
-                            className={`px-3 py-1 rounded-md ${
-                              watch(`inputs.${index}.feedMode`) === 'perCowDay'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            kg per cow day
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setValue(`inputs.${index}.feedMode`, 'annual');
-                              // Convert from current mode to annual
-                              const currentMode = watch(`inputs.${index}.feedMode`) || 'annual';
-                              const feedRate = watch(`inputs.${index}.feedRate`) || 0;
-                              const cows = watch('farmInfo.milkingCows') || 0;
-                              const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
-                              const milkL = milkOutput?.amount || 0;
-                              
-                              let annualT = 0;
-                              if (currentMode === 'perL' && milkL > 0) {
-                                annualT = feedRate * milkL / 1000;
-                              } else if (currentMode === 'perCowDay' && cows > 0) {
-                                annualT = feedRate * cows * 365 / 1000;
-                              }
-                              
-                              if (annualT > 0) {
-                                setValue(`inputs.${index}.amount`, annualT);
-                              }
-                            }}
-                            className={`px-3 py-1 rounded-md ${
-                              watch(`inputs.${index}.feedMode`) === 'annual'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            t per year
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Amount input - changes based on mode */}
-                    {field.source === 'concentrate' ? (
-                      (() => {
-                        const feedMode = watch(`inputs.${index}.feedMode`) || 'perL';
-                        const cows = watch('farmInfo.milkingCows') || 0;
-                        const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
-                        const milkL = milkOutput?.amount || 0;
-                        const feedRate = watch(`inputs.${index}.feedRate`) || 0;
-                        const amount = watch(`inputs.${index}.amount`) || 0;
-                        
-                        // Calculate conversions for helper text
-                        let annualT = 0;
-                        if (feedMode === 'perL' && milkL > 0) {
-                          annualT = feedRate * milkL / 1000;
-                        } else if (feedMode === 'perCowDay' && cows > 0) {
-                          annualT = feedRate * cows * 365 / 1000;
-                        } else if (feedMode === 'annual') {
-                          annualT = amount;
-                        }
-                        
-                        const perL = milkL > 0 ? (annualT * 1000) / milkL : 0;
-                        const perCowDay = cows > 0 ? (annualT * 1000) / (cows * 365) : 0;
-                        
-                        return (
-                          <div>
-                            {feedMode === 'perL' ? (
-                              <InputRow
-                                label="Feed Rate"
-                                unit="kg/L milk"
-                                register={register}
-                                field={`inputs.${index}.feedRate`}
-                                errors={errors}
-                                step="0.001"
-                                helpText="kg of feed per litre of milk (e.g., 0.30 = 300g concentrate per litre sold)"
-                                onChange={(e) => {
-                                  const rate = parseFloat(e.target.value) || 0;
-                                  if (milkL > 0) {
-                                    setValue(`inputs.${index}.amount`, rate * milkL / 1000);
-                                  }
-                                }}
-                              />
-                            ) : feedMode === 'perCowDay' ? (
-                              <InputRow
-                                label="Feed Rate"
-                                unit="kg/cow/day"
-                                register={register}
-                                field={`inputs.${index}.feedRate`}
-                                errors={errors}
-                                step="0.1"
-                                helpText="Daily concentrate feeding rate per cow"
-                                onChange={(e) => {
-                                  const rate = parseFloat(e.target.value) || 0;
-                                  if (cows > 0) {
-                                    setValue(`inputs.${index}.amount`, rate * cows * 365 / 1000);
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <InputRow
-                                label="Amount"
-                                unit="t/yr"
-                                register={register}
-                                field={`inputs.${index}.amount`}
-                                errors={errors}
-                                helpText="Total annual concentrate usage"
-                              />
-                            )}
-                            
-                            {/* Conversion helper text */}
-                            <p className="text-xs text-gray-500 mt-1 ml-40">
-                              = {annualT.toFixed(0)} t/yr • {perCowDay.toFixed(1)} kg/cow/day • {perL.toFixed(3)} kg/L milk
-                            </p>
-                          </div>
-                        );
-                      })()
-                    ) : (
                       <InputRow
                         label="Amount"
-                        unit={isFertiliser ? 'kg/yr' : 't/yr'}
+                        unit="t/yr"
                         register={register}
                         field={`inputs.${index}.amount`}
                         errors={errors}
                       />
-                    )}
-                    
-                    {/* Fertilizer type selector */}
-                    {isFertiliser && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Fertilizer Type
-                        </label>
-                        <select
-                          {...register(`inputs.${index}.fertilizerType`)}
-                          onChange={(e) => {
-                            const fertType = e.target.value;
-                            if (fertType && FERTILIZER_TYPES[fertType]) {
-                              const fert = FERTILIZER_TYPES[fertType];
-                              setValue(`inputs.${index}.nContent`, fert.n);
-                              setValue(`inputs.${index}.availabilityN`, fert.availabilityN);
-                            }
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        >
-                          <option value="">Select fertilizer type...</option>
-                          {Object.entries(FERTILIZER_TYPES).map(([key, fert]) => (
-                            <option key={key} value={key}>{fert.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  
-                  <div className="flex gap-4 mt-3">
-                    {field.source.includes('fertiliser') ? (
-                      <>
-                        <InlineInputRow
-                          label="N %"
-                          register={register}
-                          field={`inputs.${index}.nContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="P %"
-                          register={register}
-                          field={`inputs.${index}.pContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="K %"
-                          register={register}
-                          field={`inputs.${index}.kContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="S %"
-                          register={register}
-                          field={`inputs.${index}.sContent`}
-                          errors={errors}
-                        />
-                      </>
-                    ) : field.source === 'concentrate' ? (
-                      <>
-                        <InlineInputRow
-                          label="DM %"
-                          register={register}
-                          field={`inputs.${index}.dmPct`}
-                          errors={errors}
-                          helpText="Dry matter %"
-                          onChange={(e) => {
-                            // Recalculate CP on DM basis when DM% changes
-                            const dmPct = parseFloat(e.target.value) || 88;
-                            const cpAsFed = watch(`inputs.${index}.cpContent`) || 0;
-                            const cpDM = dmPct > 0 ? cpAsFed / (dmPct / 100) : 0;
-                            const nPct = cpDM / 6.25;
-                            setValue(`inputs.${index}.nContent`, nPct);
-                          }}
-                        />
-                        <InlineInputRow
-                          label="CP % (as fed)"
-                          register={register}
-                          field={`inputs.${index}.cpContent`}
-                          errors={errors}
-                          helpText="CP% in feed as fed"
-                          onChange={(e) => {
-                            // Calculate N% from CP as fed and DM%
-                            const cpAsFed = parseFloat(e.target.value) || 0;
-                            const dmPct = watch(`inputs.${index}.dmPct`) || 88;
-                            const cpDM = dmPct > 0 ? cpAsFed / (dmPct / 100) : 0;
-                            const nPct = cpDM / 6.25;
-                            setValue(`inputs.${index}.nContent`, nPct);
-                          }}
-                        />
-                        <InlineInputRow
-                          label="P %"
-                          register={register}
-                          field={`inputs.${index}.pContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="K %"
-                          register={register}
-                          field={`inputs.${index}.kContent`}
-                          errors={errors}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <InlineInputRow
-                          label="CP % (DM)"
-                          register={register}
-                          field={`inputs.${index}.cpContent`}
-                          errors={errors}
-                          helpText="Crude Protein % on 100% dry matter basis"
-                        />
-                        <InlineInputRow
-                          label="P %"
-                          register={register}
-                          field={`inputs.${index}.pContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="K %"
-                          register={register}
-                          field={`inputs.${index}.kContent`}
-                          errors={errors}
-                        />
-                        <InlineInputRow
-                          label="S %"
-                          register={register}
-                          field={`inputs.${index}.sContent`}
-                          errors={errors}
-                        />
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* N-availability field for fertilizers */}
-                  {isFertiliser && (
-                    <div className="mt-3">
-                      <InputRow
-                        label="N Availability"
-                        unit="%"
-                        register={register}
-                        field={`inputs.${index}.availabilityN`}
-                        errors={errors}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        helpText="Percentage of N available in first season (0-100%)"
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0;
-                          setValue(`inputs.${index}.availabilityN`, value / 100);
-                        }}
-                      />
                     </div>
-                  )}
-                </div>
-                );
+                  );
+                }
               })}
             </div>
 
