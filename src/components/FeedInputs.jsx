@@ -7,7 +7,17 @@ import {
   perCowDayFromAnnual, 
   perLFromAnnual 
 } from '../utils/convert';
+import { parseDecimal, safeParseFloat } from '../utils/inputHelpers';
 import { enableEightPxGrid } from '../config/designFlags';
+
+// Helper to handle CP changes and calculate N%
+const handleCPChange = (e, index, setValue) => {
+  const cpValue = parseDecimal(e.target.value);
+  const cp = safeParseFloat(cpValue);
+  const n = cp / 6.25;
+  setValue(`inputs.${index}.cpContent`, cp);
+  setValue(`inputs.${index}.nContent`, Math.round(n * 100) / 100);
+};
 
 export function ConcentrateInput({ 
   index, 
@@ -34,19 +44,21 @@ export function ConcentrateInput({
 
   const handleValueChange = (val) => {
     let annual = feed.annualT;
+    const cleanedVal = parseDecimal(val);
+    const numVal = safeParseFloat(cleanedVal);
     
     if (mode === 'annual') {
-      annual = parseFloat(val) || 0;
+      annual = numVal;
     } else if (mode === 'perCowDay') {
-      annual = annualFromPerCowDay(parseFloat(val) || 0, cows);
+      annual = annualFromPerCowDay(numVal, cows);
     } else if (mode === 'perL') {
-      annual = annualFromPerL(parseFloat(val) || 0, milkL);
+      annual = annualFromPerL(numVal, milkL);
     }
 
-    // Update all three values (round to 1 decimal for perCowDay and perL)
+    // Update all three values (round to 2 decimal for perCowDay and perL)
     setValue(`inputs.${index}.amount`, annual);
-    setValue(`inputs.${index}.perCowDay`, Math.round(perCowDayFromAnnual(annual, cows) * 10) / 10);
-    setValue(`inputs.${index}.perL`, Math.round(perLFromAnnual(annual, milkL) * 10) / 10);
+    setValue(`inputs.${index}.perCowDay`, Math.round(perCowDayFromAnnual(annual, cows) * 100) / 100);
+    setValue(`inputs.${index}.perL`, Math.round(perLFromAnnual(annual, milkL) * 100) / 100);
   };
 
   const handleModeChange = (newMode) => {
@@ -151,20 +163,21 @@ export function ConcentrateInput({
         
         {/* Display helper line with all conversions */}
         <p className="text-xs text-gray-500 mt-1 ml-40">
-          = {feed.perCowDay.toFixed(1)} kg cow⁻¹ day⁻¹ • {feed.perL.toFixed(1)} kg L⁻¹ • {feed.annualT.toFixed(0)} t/yr
+          = {feed.perCowDay.toFixed(2)} kg cow⁻¹ day⁻¹ • {feed.perL.toFixed(2)} kg L⁻¹ • {feed.annualT.toFixed(0)} t/yr
         </p>
       </div>
       
       {/* Nutrient content inputs */}
       <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
         <InputRow
-          label="CP Content"
+          label="CP % (fresh weight)"
           unit="%"
           register={register}
           field={`inputs.${index}.cpContent`}
           errors={errors}
           step="0.1"
           helpText="Crude protein %"
+          onChange={(e) => handleCPChange(e, index, setValue)}
         />
         <InputRow
           label="N Content"
@@ -263,20 +276,21 @@ export function ForageInput({
         
         {/* Display forage intake per cow per day */}
         <p className="text-xs text-gray-500 mt-1 ml-40">
-          ≈ {foragePerCowDay.toFixed(1)} kg cow⁻¹ day⁻¹
+          ≈ {foragePerCowDay.toFixed(2)} kg cow⁻¹ day⁻¹
         </p>
       </div>
       
       {/* Nutrient content inputs */}
       <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
         <InputRow
-          label="CP Content"
+          label="CP % (fresh weight)"
           unit="%"
           register={register}
           field={`inputs.${index}.cpContent`}
           errors={errors}
           step="0.1"
           helpText="Crude protein %"
+          onChange={(e) => handleCPChange(e, index, setValue)}
         />
         <InputRow
           label="N Content"

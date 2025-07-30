@@ -47,8 +47,9 @@ export function InputRow({
               valueAsNumber: type === 'number',
               required: required ? `${label} is required` : false
             })}
-            type={type === 'number' ? 'text' : type}
+            type="text"
             inputMode={type === 'number' ? 'decimal' : 'text'}
+            pattern={type === 'number' ? '^[0-9]*[.]?[0-9]*$' : undefined}
             className={`w-full px-3 py-1.5 border rounded-md text-sm
                        ${error ? 'border-red-500 pr-8' : 'border-gray-300'}
                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -123,6 +124,7 @@ export function InlineInputRow({
           {...register(field, { valueAsNumber: true })}
           type="text"
           inputMode="decimal"
+          pattern="^[0-9]*[.]?[0-9]*$"
           className={`${width} px-2 py-1 border rounded text-sm text-center
                      ${error ? 'border-red-500' : 'border-gray-300'}
                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
