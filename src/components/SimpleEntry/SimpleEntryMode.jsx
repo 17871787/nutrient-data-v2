@@ -33,14 +33,14 @@ const STEPS = [
   { id: 'review', label: 'Review & Save', icon: BarChart3 },
 ];
 
-// Forage type defaults with CP% on DM basis
+// Forage type defaults with CP% on DM basis and default DM%
 const FORAGE_DEFAULTS = {
-  'grass_silage': { label: 'Grass Silage', cp: 14 },
-  'grazed_grass': { label: 'Grazed Grass', cp: 22 },
-  'wholecrop_cereal': { label: 'Whole-crop Cereal Silage', cp: 8 },
-  'maize_silage': { label: 'Maize Silage', cp: 8 },
-  'hay': { label: 'Hay', cp: 11 },
-  'straw': { label: 'Straw', cp: 3.5 }
+  'grass_silage': { label: 'Grass Silage', cp: 14, dm: 30 },
+  'grazed_grass': { label: 'Grazed Grass', cp: 22, dm: 22 },
+  'wholecrop_cereal': { label: 'Whole-crop Cereal Silage', cp: 8, dm: 35 },
+  'maize_silage': { label: 'Maize Silage', cp: 8, dm: 30 },
+  'hay': { label: 'Hay', cp: 11, dm: 85 },
+  'straw': { label: 'Straw', cp: 3.5, dm: 85 }
 };
 
 // Fertilizer type defaults with N-availability factors

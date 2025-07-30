@@ -230,6 +230,20 @@ export function ForageInput({
   const cows = watch('farmInfo.milkingCows') || 0;
   const forageT = watch(`inputs.${index}.amount`) || 0;
   const foragePerCowDay = perCowDayFromAnnual(forageT, cows);
+  const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
+  const milkL = milkOutput?.amount || 0;
+  const foragePerL = perLFromAnnual(forageT, milkL);
+
+  // Helper to handle forage CP changes with DM% consideration
+  const handleForageCPChange = (e) => {
+    const cpValue = parseDecimal(e.target.value);
+    const cpFresh = safeParseFloat(cpValue);
+    setValue(`inputs.${index}.cpContent`, cpFresh);
+    // Recalculate N based on new CP and current DM%
+    const dmPct = watch(`inputs.${index}.dmContent`) || 30;
+    const cpDM = cpFresh / (dmPct / 100);
+    setValue(`inputs.${index}.nContent`, Math.round((cpDM / 6.25) * 100) / 100);
+  };
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
@@ -257,9 +271,15 @@ export function ForageInput({
           onChange={(e) => {
             const forageType = e.target.value;
             if (forageType && FORAGE_DEFAULTS[forageType]) {
-              const cpDefault = FORAGE_DEFAULTS[forageType].cp;
-              setValue(`inputs.${index}.cpContent`, cpDefault);
-              setValue(`inputs.${index}.nContent`, cpDefault / 6.25);
+              const defaults = FORAGE_DEFAULTS[forageType];
+              const dmPct = defaults.dm || 30;
+              const cpFresh = defaults.cp;
+              
+              setValue(`inputs.${index}.dmContent`, dmPct);
+              setValue(`inputs.${index}.cpContent`, cpFresh);
+              // Calculate N based on CP DM basis
+              const cpDM = cpFresh / (dmPct / 100);
+              setValue(`inputs.${index}.nContent`, cpDM / 6.25);
             }
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -282,14 +302,35 @@ export function ForageInput({
           errors={errors}
         />
         
-        {/* Display forage intake per cow per day */}
+        {/* Display forage intake per cow per day and per L milk */}
         <p className="text-xs text-gray-500 mt-1 ml-40">
-          ≈ {foragePerCowDay.toFixed(2)} kg cow⁻¹ day⁻¹
+          ≈ {foragePerCowDay.toFixed(2)} kg cow⁻¹ day⁻¹ • {foragePerL.toFixed(2)} kg L⁻¹ • {forageT.toFixed(0)} t/yr
         </p>
       </div>
       
+      {/* DM% input */}
+      <div className="mb-3">
+        <InputRow
+          label="DM %"
+          unit="%"
+          register={register}
+          field={`inputs.${index}.dmContent`}
+          errors={errors}
+          step="1"
+          helpText="Dry matter percentage"
+          onChange={(e) => {
+            const dmValue = parseFloat(e.target.value) || 30;
+            setValue(`inputs.${index}.dmContent`, dmValue);
+            // Recalculate N based on CP fresh and new DM%
+            const cpFresh = watch(`inputs.${index}.cpContent`) || 0;
+            const cpDM = cpFresh / (dmValue / 100);
+            setValue(`inputs.${index}.nContent`, Math.round((cpDM / 6.25) * 100) / 100);
+          }}
+        />
+      </div>
+      
       {/* Nutrient content inputs */}
-      <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
+      <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3' : 'gap-3'}`}>
         <InputRow
           label="CP % (fresh weight)"
           unit="%"
@@ -298,7 +339,7 @@ export function ForageInput({
           errors={errors}
           step="0.1"
           helpText="Crude protein %"
-          onChange={(e) => handleCPChange(e, index, setValue)}
+          onChange={handleForageCPChange}
         />
         <InputRow
           label="N Content"
