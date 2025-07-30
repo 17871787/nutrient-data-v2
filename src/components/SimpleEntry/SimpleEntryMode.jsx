@@ -269,7 +269,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             {/* Group inputs by type */}
             {inputFields.some(f => f.source === 'concentrate') && (
               <div className="mb-6">
-                <h4 className="text-md font-medium mb-3 flex items-center gap-1">
+                <h4 className="text-md font-medium mb-3 mt-6 flex items-center gap-1">
                   Purchased Feed
                   <span className="text-xs text-gray-500 font-normal">
                     (include young-stock)
@@ -296,13 +296,21 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => addInputRow('concentrate')}
+                  className="mt-3 inline-flex items-center px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add concentrate
+                </button>
               </div>
             )}
             
             {/* Forage section */}
             {inputFields.some(f => ['silage', 'hay', 'straw'].includes(f.source)) && (
               <div className="mb-6">
-                <h4 className="text-md font-medium mb-3 flex items-center gap-1">
+                <h4 className="text-md font-medium mb-3 mt-6 flex items-center gap-1">
                   Forage Production / Use
                   <span className="text-xs text-gray-500 font-normal">
                     (totals incl. young-stock)
@@ -329,13 +337,21 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => addInputRow('silage')}
+                  className="mt-3 inline-flex items-center px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add forage
+                </button>
               </div>
             )}
             
             {/* Fertilizer section */}
             {inputFields.some(f => f.source.includes('fertiliser')) && (
               <div className="mb-6">
-                <h4 className="text-md font-medium mb-3">Fertilisers</h4>
+                <h4 className="text-md font-medium mb-3 mt-6">Fertilisers</h4>
                 <div className="space-y-4">
                   {inputFields.filter(f => f.source.includes('fertiliser')).map((field) => {
                     const index = inputFields.findIndex(f => f.id === field.id);
@@ -354,6 +370,14 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => addInputRow('fertiliser_N')}
+                  className="mt-3 inline-flex items-center px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add fertiliser
+                </button>
               </div>
             )}
             
@@ -387,33 +411,6 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     </div>
                   );
                 })}
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => addInputRow('concentrate')}
-                className="px-3 py-1 text-sm bg-primary-light text-primary rounded hover:bg-primary/20"
-              >
-                <Plus className="w-4 h-4 inline mr-1" />
-                Add Concentrate
-              </button>
-              <button
-                type="button"
-                onClick={() => addInputRow('silage')}
-                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
-              >
-                <Plus className="w-4 h-4 inline mr-1" />
-                Add Forage
-              </button>
-              <button
-                type="button"
-                onClick={() => addInputRow('fertiliser_N')}
-                className="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded hover:bg-orange-200"
-              >
-                <Plus className="w-4 h-4 inline mr-1" />
-                Add Fertiliser
-              </button>
             </div>
           </div>
         );

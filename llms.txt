@@ -251,8 +251,9 @@ Data Flow:
    - Pro: KOU-based, detailed pathways
    - Seamless transition between modes
 
-## Recent Updates
+## Recent Updates (as of July 30, 2025)
 
+### Initial Updates
 1. Added milk composition fields (fat%, protein%)
 2. Implemented veterinary consultant feedback:
    - CP labeling as dry matter basis
@@ -264,6 +265,101 @@ Data Flow:
 3. Changed milk units from tonnes to litres
 4. Created experimental fork for UI testing
 5. Integrated GHG estimation throughout
+
+### Latest Session Updates (July 30, 2025)
+1. **UI Improvements (Backlog items #10-12)**:
+   - Desaturated success/error colors with design flags
+   - Increased input padding to 16px
+   - Implemented 8px grid system with CSS custom properties
+   - All features toggleable via designFlags.ts
+
+2. **Accessibility Fixes**:
+   - Added aria-labels to all icon buttons
+   - Fixed form label associations
+   - Added titles to buttons without text
+
+3. **Sainsbury's Theme**:
+   - Created custom brand theme with #F06C00 primary color
+   - Added gradient effects and enhanced styling
+   - Created SVG logo integration
+   - Theme accessible via ?theme=sainsburys parameter
+
+4. **Technical Documentation**:
+   - Created TECHNICAL_DOCUMENTATION.md with all calculations
+   - Documented equations, constants, and assumptions
+   - Added for veterinary review
+
+5. **Veterinary Feedback Implementation**:
+   - Feed-rate helper shows 2 decimal places
+   - CP labeled as "CP % (fresh weight)"
+   - Live N% calculation when CP changes (N = CP ÷ 6.25)
+   - Fixed decimal input handling (e.g., ".30" now works)
+   - Added DM% input to all forage rows
+   - Live CP/N recalculation based on DM%
+   - Changed pre-set forage label from "Grass Silage" to neutral "Forage"
+
+6. **Data Input Improvements**:
+   - Fertilizer N% bug fixed (now syncs with dropdown selection)
+   - Updated forage K% defaults:
+     * Grass Silage: 2.25%
+     * Maize Silage: 1.0%
+     * Whole-crop Silage: 1.0%
+   - Fertilizer amounts now entered in tonnes/year (was kg/year)
+   - Preserved kg N ha⁻¹ helper display
+
+7. **Livestock Output Updates**:
+   - Cull cows now entered as number + average live-weight
+   - Live-weight converted to carcass weight using 54% kill-out ratio
+   - N/P calculations based on carcass weight (2.5% N, 0.7% P)
+   - Created livestock constants file
+
+8. **User Experience**:
+   - Added "include young-stock" reminders to feed/forage sections
+   - Info tooltips explain why youngstock matters for NUE
+   - Section headers group inputs by type (Purchased Feed, Forage, Fertilizers)
+
+9. **Forage Calculations**:
+   - Created forageMath.js utility functions
+   - Added helper showing: "≈ X t DM • Y t CP (Z% DM)"
+   - Correct fresh→dry→protein→N workflow implemented
+   - Fresh weight CP% input with live DM% adjustments
+   - Proper N% calculation: (CP fresh ÷ (DM% ÷ 100)) ÷ 6.25
+   - Live recalculation when either CP% or DM% changes
+
+10. **Code Quality**:
+    - All accessibility issues resolved
+    - Consistent use of feature flags via designFlags.ts
+    - Proper TypeScript/JavaScript module structure
+    - React Hook Form integration for all inputs
+    - Tailwind CSS with custom theme support
+
+## Key Files Modified
+
+### Configuration & Constants
+- `src/config/designFlags.ts` - UI feature toggles
+- `src/constants/forageDefaults.js` - Forage K% values by type
+- `src/constants/fertiliserDefaults.js` - Fertilizer N% by type
+- `src/constants/livestock.js` - Kill-out ratio and carcass N/P%
+
+### Utilities
+- `src/utils/forageMath.js` - Fresh/dry/protein/N conversions
+- `src/utils/units.js` - Unit conversion helpers
+- `src/utils/inputHelpers.js` - Decimal input handling
+
+### Components
+- `src/components/FeedInputs.jsx` - Major updates for DM% workflow
+- `src/components/SimpleEntry/SimpleEntryMode.jsx` - Section headers, youngstock reminders
+- `src/components/SimpleEntry/FertiliserCard.jsx` - N% sync fixes
+- `src/components/SimpleEntry/CullCowsInput.jsx` - Live-weight input
+
+### Styling
+- `src/styles/ui-improvements.css` - Desaturated colors, 8px grid
+- `src/themes/sainsburys.css` - Brand theme implementation
+- `public/logo.svg` - Sainsbury's logo
+
+### Documentation
+- `TECHNICAL_DOCUMENTATION.md` - Complete calculation reference
+- `llms.txt` - This file, updated with session changes
 
 ## Deployment
 
