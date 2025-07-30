@@ -80,7 +80,7 @@ export function ConcentrateInput({
             onClick={() => handleModeChange('annual')}
             className={`px-3 py-1 rounded-md ${
               mode === 'annual'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -91,7 +91,7 @@ export function ConcentrateInput({
             onClick={() => handleModeChange('perCowDay')}
             className={`px-3 py-1 rounded-md ${
               mode === 'perCowDay'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -102,7 +102,7 @@ export function ConcentrateInput({
             onClick={() => handleModeChange('perL')}
             className={`px-3 py-1 rounded-md ${
               mode === 'perL'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >

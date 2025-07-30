@@ -173,8 +173,8 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             >
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors
-                  ${index < currentStep ? 'bg-blue-600 border-blue-600 text-white' : ''}
-                  ${index === currentStep ? 'border-blue-600 text-blue-600' : ''}
+                  ${index < currentStep ? 'bg-primary border-primary text-white' : ''}
+                  ${index === currentStep ? 'border-primary text-primary' : ''}
                   ${index > currentStep ? 'border-gray-300 text-gray-400' : ''}`}
               >
                 <Icon className="w-5 h-5" />
@@ -182,7 +182,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
               {index < STEPS.length - 1 && (
                 <div
                   className={`flex-1 h-1 mx-2 transition-colors
-                    ${index < currentStep ? 'bg-blue-600' : 'bg-gray-300'}`}
+                    ${index < currentStep ? 'bg-primary' : 'bg-gray-300'}`}
                 />
               )}
             </div>
@@ -344,7 +344,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
               <button
                 type="button"
                 onClick={() => addInputRow('concentrate')}
-                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                className="px-3 py-1 text-sm bg-primary-light text-primary rounded hover:bg-primary/20"
               >
                 <Plus className="w-4 h-4 inline mr-1" />
                 Add Concentrate
@@ -642,7 +642,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
 
             {/* Farm Efficiency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-primary-light rounded-lg p-4">
                 <h4 className="font-medium text-gray-700 mb-2">Nitrogen Use Efficiency (NUE)</h4>
                 <div className="space-y-2">
                   <div>
@@ -652,7 +652,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-blue-500 transition-all duration-500"
+                        className="h-full bg-primary transition-all duration-500"
                         style={{ width: `${Math.min(nutrientBalance.nEfficiency, 100)}%` }}
                       />
                     </div>
@@ -705,7 +705,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
               <button
                 type="button"
                 onClick={handleSwitchToPro}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2"
               >
                 <ArrowRight className="w-4 h-4" />
                 Switch to Pro Mode
@@ -761,7 +761,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover flex items-center gap-2"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

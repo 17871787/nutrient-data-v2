@@ -7,3 +7,4 @@ export const enableFocusGlow = true;
 export const enableDesatAlerts = true;  // backlog #10
 export const enableInputPadding = true;  // backlog #11
 export const enableEightPxGrid = true;   // backlog #12
+export const enableSainsburysTheme = true;   // switch off to roll back instantly

@@ -3,10 +3,12 @@ import HighResolutionNutrientBudget from './components/HighResolutionNutrientBud
 import SimpleEntryMode from './components/SimpleEntry/SimpleEntryMode'
 import ErrorBoundary from './components/ErrorBoundary'
 import { getUIClasses } from './config/uiFeatures'
+import { BrandLoader } from './BrandLoader'
 
 function App() {
   const [mode, setMode] = useState('simple') // Start with simple mode
   const [initialData, setInitialData] = useState(null)
+  const { branding } = BrandLoader()
 
   // Handle switching from Simple to Pro mode
   const handleSwitchToPro = (data) => {
@@ -28,6 +30,18 @@ function App() {
 
   return (
     <div className={getUIClasses()}>
+      {branding && (
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <img 
+              src={branding.logoUrl} 
+              alt={branding.companyName} 
+              className="h-10 object-contain"
+            />
+            <span className="text-sm text-gray-600">Nutrient Data Calculator</span>
+          </div>
+        </div>
+      )}
       <ErrorBoundary>
         {mode === 'simple' ? (
           <SimpleEntryMode 

@@ -1,0 +1,23 @@
+/* --- SAINSBURY'S DIGITAL PALETTE --------------------------------- */
+/* Core oranges from the Sainsbury's Design System (Base/Dark/Light) */
+:root {
+  --brand-primary:     #F06C00;   /* Base Orange */
+  --brand-primary-dark:#E55000;
+  --brand-primary-light:#FEF5F0;
+
+  --brand-plum:        #5A2A61;   /* Used sparingly for accents */
+
+  /* Semantic roles (can override defaults) */
+  --color-primary:     var(--brand-primary);
+  --color-primary-hover: var(--brand-primary-dark);
+  --color-success:     #39B54A;   /* retains green for clarity */
+  --color-danger:      #D22730;
+
+  /* Component tokens (optional) */
+  --radius-md:         0.5rem;
+  --shadow-card:       0 1px 4px rgba(0,0,0,.08);
+
+  /* Typography */
+  --font-display:      'Helvetica Neue', Arial, sans-serif;
+  --font-text:         'Helvetica Neue', Arial, sans-serif;
+}
