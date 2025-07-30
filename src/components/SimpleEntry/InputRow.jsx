@@ -11,6 +11,8 @@ export function InputRow({
   placeholder = '0',
   helpText = null,
   required = false,
+  value,
+  onChange,
   ...inputProps 
 }) {
   // Extract nested error if field uses dot notation
@@ -43,10 +45,10 @@ export function InputRow({
         <div className="flex-1 relative">
           <input
             id={inputId}
-            {...register(field, { 
+            {...(value !== undefined ? {} : register(field, { 
               valueAsNumber: type === 'number',
               required: required ? `${label} is required` : false
-            })}
+            }))}
             type="text"
             inputMode={type === 'number' ? 'decimal' : 'text'}
             pattern={type === 'number' ? '^[0-9]*[.]?[0-9]*$' : undefined}
@@ -56,6 +58,8 @@ export function InputRow({
                        disabled:bg-gray-100 disabled:cursor-not-allowed`}
             placeholder={placeholder}
             defaultValue={type === 'number' ? undefined : ''} // Let react-hook-form handle the default
+            value={value}
+            onChange={onChange}
             {...inputProps}
           />
           

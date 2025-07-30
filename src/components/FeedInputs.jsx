@@ -30,6 +30,7 @@ export function ConcentrateInput({
   farmData
 }) {
   const [mode, setMode] = useState(watch(`inputs.${index}.feedMode`) || 'annual');
+  const [displayValues, setDisplayValues] = useState({});
   
   const cows = watch('farmInfo.milkingCows') || 0;
   const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
@@ -42,16 +43,20 @@ export function ConcentrateInput({
     perL: watch(`inputs.${index}.perL`) || perLFromAnnual(watch(`inputs.${index}.amount`) || 0, milkL)
   };
 
-  const handleValueChange = (val) => {
+  const handleValueChange = (val, inputMode) => {
     let annual = feed.annualT;
     const cleanedVal = parseDecimal(val);
+    
+    // Update display value to allow typing decimals
+    setDisplayValues(prev => ({ ...prev, [inputMode]: cleanedVal }));
+    
     const numVal = safeParseFloat(cleanedVal);
     
-    if (mode === 'annual') {
+    if (inputMode === 'annual') {
       annual = numVal;
-    } else if (mode === 'perCowDay') {
+    } else if (inputMode === 'perCowDay') {
       annual = annualFromPerCowDay(numVal, cows);
-    } else if (mode === 'perL') {
+    } else if (inputMode === 'perL') {
       annual = annualFromPerL(numVal, milkL);
     }
 
@@ -133,7 +138,8 @@ export function ConcentrateInput({
             field={`inputs.${index}.amount`}
             errors={errors}
             helpText="Total annual concentrate usage"
-            onChange={(e) => handleValueChange(e.target.value)}
+            value={displayValues.annual ?? watch(`inputs.${index}.amount`) ?? ''}
+            onChange={(e) => handleValueChange(e.target.value, 'annual')}
           />
         )}
         {mode === 'perCowDay' && (
@@ -145,7 +151,8 @@ export function ConcentrateInput({
             errors={errors}
             step="0.1"
             helpText="Daily concentrate feeding rate per cow"
-            onChange={(e) => handleValueChange(e.target.value)}
+            value={displayValues.perCowDay ?? watch(`inputs.${index}.perCowDay`) ?? ''}
+            onChange={(e) => handleValueChange(e.target.value, 'perCowDay')}
           />
         )}
         {mode === 'perL' && (
@@ -157,7 +164,8 @@ export function ConcentrateInput({
             errors={errors}
             step="0.1"
             helpText="kg of feed per litre of milk (e.g., 0.3 = 300g concentrate per litre sold)"
-            onChange={(e) => handleValueChange(e.target.value)}
+            value={displayValues.perL ?? watch(`inputs.${index}.perL`) ?? ''}
+            onChange={(e) => handleValueChange(e.target.value, 'perL')}
           />
         )}
         
