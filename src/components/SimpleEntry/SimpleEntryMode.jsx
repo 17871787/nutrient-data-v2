@@ -140,7 +140,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
     const defaults = DEFAULT_NUTRIENT_CONTENTS[type] || { cp: 0, n: 0, p: 0, k: 0, s: 0 };
     const labels = {
       concentrate: 'Concentrates',
-      silage: 'Silage',
+      silage: 'Forage',
       hay: 'Hay',
       straw: 'Straw',
       fertiliser_N: 'N Fertiliser',

@@ -132,13 +132,14 @@ export const DEFAULT_FORM_VALUES = {
     },
     { 
       source: 'silage', 
-      label: 'Grass Silage', 
+      label: 'Forage', 
       amount: 2800, 
       cpContent: DEFAULT_NUTRIENT_CONTENTS.silage.cp,
       nContent: DEFAULT_NUTRIENT_CONTENTS.silage.n,
       pContent: DEFAULT_NUTRIENT_CONTENTS.silage.p,
       kContent: DEFAULT_NUTRIENT_CONTENTS.silage.k,
-      sContent: DEFAULT_NUTRIENT_CONTENTS.silage.s
+      sContent: DEFAULT_NUTRIENT_CONTENTS.silage.s,
+      dmContent: 30  // Add default DM% for grass silage
     },
     { 
       source: 'fertiliser_N', 
