@@ -15,7 +15,8 @@ import {
   Package,
   Milk,
   Droplets,
-  BarChart3
+  BarChart3,
+  Info
 } from 'lucide-react';
 import { simpleEntrySchema, DEFAULT_FORM_VALUES, DEFAULT_NUTRIENT_CONTENTS } from '../../schemas/simpleEntrySchema';
 import { InputRow, InlineInputRow } from './InputRow';
@@ -265,69 +266,118 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Feed & Fertiliser Inputs</h2>
             
+            {/* Group inputs by type */}
+            {inputFields.some(f => f.source === 'concentrate') && (
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-3 flex items-center gap-1">
+                  Purchased Feed
+                  <span className="text-xs text-gray-500 font-normal">
+                    (include young-stock)
+                  </span>
+                  <Info className="w-4 h-4 text-gray-400 cursor-help ml-1"
+                        title="Young-stock intake is part of the farm nitrogen balance. Excluding it will inflate NUE."
+                        aria-label="Young-stock intake is part of the farm nitrogen balance. Excluding it will inflate NUE."/>
+                </h4>
+                <div className="space-y-4">
+                  {inputFields.filter(f => f.source === 'concentrate').map((field, idx) => {
+                    const index = inputFields.findIndex(f => f.id === field.id);
+                    return (
+                      <ConcentrateInput
+                        key={field.id}
+                        index={index}
+                        field={field}
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        removeInput={removeInput}
+                        farmData={watchedValues}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Forage section */}
+            {inputFields.some(f => ['silage', 'hay', 'straw'].includes(f.source)) && (
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-3 flex items-center gap-1">
+                  Forage Production / Use
+                  <span className="text-xs text-gray-500 font-normal">
+                    (totals incl. young-stock)
+                  </span>
+                  <Info className="w-4 h-4 text-gray-400 cursor-help ml-1"
+                        title="Young-stock intake is part of the farm nitrogen balance. Excluding it will inflate NUE."
+                        aria-label="Young-stock intake is part of the farm nitrogen balance. Excluding it will inflate NUE."/>
+                </h4>
+                <div className="space-y-4">
+                  {inputFields.filter(f => ['silage', 'hay', 'straw'].includes(f.source)).map((field) => {
+                    const index = inputFields.findIndex(f => f.id === field.id);
+                    return (
+                      <ForageInput
+                        key={field.id}
+                        index={index}
+                        field={field}
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        removeInput={removeInput}
+                        FORAGE_DEFAULTS={FORAGE_DEFAULTS}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Fertilizer section */}
+            {inputFields.some(f => f.source.includes('fertiliser')) && (
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-3">Fertilisers</h4>
+                <div className="space-y-4">
+                  {inputFields.filter(f => f.source.includes('fertiliser')).map((field) => {
+                    const index = inputFields.findIndex(f => f.id === field.id);
+                    return (
+                      <FertilizerInput
+                        key={field.id}
+                        index={index}
+                        field={field}
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        removeInput={removeInput}
+                        FERTILIZER_TYPES={FERTILIZER_TYPES}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Original mapping for any other types */}
             <div className="space-y-4">
-              {inputFields.map((field, index) => {
-                const isForage = ['silage', 'hay', 'straw'].includes(field.source);
-                const isFertiliser = field.source.includes('fertiliser');
-                
-                // Use new components based on input type
-                if (field.source === 'concentrate') {
-                  return (
-                    <ConcentrateInput
-                      key={field.id}
-                      index={index}
-                      field={field}
-                      register={register}
-                      errors={errors}
-                      watch={watch}
-                      setValue={setValue}
-                      removeInput={removeInput}
-                      farmData={watchedValues}
-                    />
-                  );
-                } else if (isForage) {
-                  return (
-                    <ForageInput
-                      key={field.id}
-                      index={index}
-                      field={field}
-                      register={register}
-                      errors={errors}
-                      watch={watch}
-                      setValue={setValue}
-                      removeInput={removeInput}
-                      FORAGE_DEFAULTS={FORAGE_DEFAULTS}
-                    />
-                  );
-                } else if (isFertiliser) {
-                  return (
-                    <FertilizerInput
-                      key={field.id}
-                      index={index}
-                      field={field}
-                      register={register}
-                      errors={errors}
-                      watch={watch}
-                      setValue={setValue}
-                      removeInput={removeInput}
-                      FERTILIZER_TYPES={FERTILIZER_TYPES}
-                    />
-                  );
-                } else {
-                  // Default case for other input types
-                  return (
-                    <div key={field.id} className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium text-gray-700">{field.label}</h3>
-                        <button
-                          type="button"
-                          onClick={() => removeInput(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <InputRow
+              {inputFields.filter(f => 
+                f.source !== 'concentrate' && 
+                !['silage', 'hay', 'straw'].includes(f.source) && 
+                !f.source.includes('fertiliser')
+              ).map((field) => {
+                const index = inputFields.findIndex(f => f.id === field.id);
+                return (
+                  <div key={field.id} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-gray-700">{field.label}</h3>
+                      <button
+                        type="button"
+                        onClick={() => removeInput(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <InputRow
                         label="Amount"
                         unit="t/yr"
                         register={register}
@@ -336,8 +386,7 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                       />
                     </div>
                   );
-                }
-              })}
+                })}
             </div>
 
             <div className="flex flex-wrap gap-2 mt-4">
