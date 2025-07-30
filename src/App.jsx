@@ -31,14 +31,17 @@ function App() {
   return (
     <div className={getUIClasses()}>
       {branding && (
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="bg-white border-b border-gray-200 px-4 py-4 shadow-sm">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <img 
               src={branding.logoUrl} 
               alt={branding.companyName} 
-              className="h-10 object-contain"
+              className="h-12 object-contain drop-shadow-sm hover:drop-shadow-md transition-all duration-200"
             />
-            <span className="text-sm text-gray-600">Nutrient Data Calculator</span>
+            <div className="text-right">
+              <h2 className="text-sm font-semibold text-gray-800">Nutrient Data Calculator</h2>
+              <p className="text-xs text-gray-500">Powered by {branding.companyName}</p>
+            </div>
           </div>
         </div>
       )}

@@ -1,4 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40">
-  <rect fill="#F06C00" width="200" height="40"/>
-  <text x="100" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">Sainsbury's</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F06C00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E55000;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.1"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect x="5" y="5" width="230" height="50" rx="8" fill="url(#orangeGradient)" filter="url(#shadow)"/>
+  
+  <!-- Sainsbury's text -->
+  <text x="120" y="37" font-family="Helvetica Neue, Arial, sans-serif" font-size="28" font-weight="700" fill="white" text-anchor="middle">
+    Sainsbury's
+  </text>
+  
+  <!-- Decorative element -->
+  <circle cx="30" cy="30" r="8" fill="white" opacity="0.3"/>
+  <circle cx="30" cy="30" r="5" fill="white" opacity="0.5"/>
 </svg>
