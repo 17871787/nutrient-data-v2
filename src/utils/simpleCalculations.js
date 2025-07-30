@@ -1,4 +1,5 @@
 import { tToKg } from './units';
+import { KILL_OUT_RATIO, N_IN_CARCASS, P_IN_CARCASS } from '../constants/livestock';
 
 // Calculate nutrient balance from simple entry form data
 export function calculateSimpleBalance(formData) {
@@ -74,11 +75,21 @@ export function calculateSimpleBalance(formData) {
       totalOutputs.N += milkN;
       totalOutputs.P += milkP;
     } else {
-      // Livestock outputs
-      const livestockN = (amount * 1 * (output.nContent || 0)) / 100;
-      const livestockP = (amount * 1 * (output.pContent || 0)) / 100;
-      totalOutputs.N += livestockN;
-      totalOutputs.P += livestockP;
+      // Livestock outputs - now using number and average weight
+      if (output.number && output.avgWeightKg) {
+        // Convert live-weight to carcass weight
+        const carcassKg = output.number * output.avgWeightKg * KILL_OUT_RATIO;
+        const livestockN = carcassKg * N_IN_CARCASS;
+        const livestockP = carcassKg * P_IN_CARCASS;
+        totalOutputs.N += livestockN;
+        totalOutputs.P += livestockP;
+      } else {
+        // Legacy calculation for backwards compatibility
+        const livestockN = (amount * 1 * (output.nContent || 0)) / 100;
+        const livestockP = (amount * 1 * (output.pContent || 0)) / 100;
+        totalOutputs.N += livestockN;
+        totalOutputs.P += livestockP;
+      }
     }
   });
   

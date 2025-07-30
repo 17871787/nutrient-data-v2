@@ -383,14 +383,37 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
                 <div key={field.id} className="bg-gray-50 rounded-lg p-4">
                   <h3 className="font-medium text-gray-700 mb-3">{field.label}</h3>
                   
-                  <InputRow
-                    label="Amount"
-                    unit={field.type === 'milk' ? 'litres/yr' : 'kg total'}
-                    register={register}
-                    field={`outputs.${index}.amount`}
-                    errors={errors}
-                    helpText={field.type === 'milk' ? 'Total annual milk production in litres' : 'Total weight of culled animals'}
-                  />
+                  {field.type === 'milk' ? (
+                    <InputRow
+                      label="Amount"
+                      unit="litres/yr"
+                      register={register}
+                      field={`outputs.${index}.amount`}
+                      errors={errors}
+                      helpText="Total annual milk production in litres"
+                    />
+                  ) : (
+                    <>
+                      <InputRow
+                        label="Number of Cull Cows"
+                        unit="head/yr"
+                        register={register}
+                        field={`outputs.${index}.number`}
+                        errors={errors}
+                        helpText="Number of cows culled per year"
+                        step="1"
+                      />
+                      <InputRow
+                        label="Average Live-Weight"
+                        unit="kg"
+                        register={register}
+                        field={`outputs.${index}.avgWeightKg`}
+                        errors={errors}
+                        helpText="Average live-weight per cow (typical kill-out 54%)"
+                        step="10"
+                      />
+                    </>
+                  )}
                   
                   {field.type === 'milk' && milkingCows > 0 && (
                     <div className="mt-2 text-sm text-gray-600 ml-40">

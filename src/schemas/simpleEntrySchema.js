@@ -48,6 +48,8 @@ export const simpleEntrySchema = z.object({
     type: z.enum(['milk', 'livestock']),
     label: z.string(),
     amount: z.number().nonnegative('Amount cannot be negative'),
+    number: z.number().int().nonnegative().optional(), // Number of cull cows (livestock only)
+    avgWeightKg: z.number().positive().optional(), // Average live-weight per cow (livestock only)
     fatPct: z.number().min(2).max(6).optional(), // % butter-fat (milk only)
     proteinPct: z.number().min(2).max(5).optional(), // % true protein (milk only)
     nContent: z.number().min(0).max(10, 'N content seems too high'),
@@ -155,7 +157,7 @@ export const DEFAULT_FORM_VALUES = {
   ],
   outputs: [
     { type: 'milk', label: 'Milk Sales', amount: 1440000, fatPct: 4.1, proteinPct: 3.3, nContent: 0.53, pContent: 0.09 }, // litres/year
-    { type: 'livestock', label: 'Cull Cows', amount: 12000, nContent: 2.5, pContent: 0.7 },
+    { type: 'livestock', label: 'Cull Cows', amount: 12000, number: 20, avgWeightKg: 650, nContent: 2.5, pContent: 0.7 },
   ],
   manure: {
     slurryApplied: 4200,
