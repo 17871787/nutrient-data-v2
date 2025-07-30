@@ -1,3 +1,5 @@
+import { tToKg } from './units';
+
 // Calculate nutrient balance from simple entry form data
 export function calculateSimpleBalance(formData) {
   const { farmInfo, inputs = [], outputs = [], manure = {} } = formData;
@@ -21,7 +23,8 @@ export function calculateSimpleBalance(formData) {
   // Sum up feed and fertilizer inputs
   inputs.forEach(input => {
     const amount = input.amount || 0;
-    const multiplier = input.source?.includes('fertiliser') ? 1 : 1000; // kg for fertilizer, tonnes to kg for feed
+    // All inputs are now in tonnes, convert to kg
+    const amountKg = tToKg(amount);
     
     // For feeds, convert CP to N (CP / 6.25)
     let nContent = input.nContent || 0;
@@ -29,10 +32,10 @@ export function calculateSimpleBalance(formData) {
       nContent = (input.cpContent || 0) / 6.25;
     }
     
-    const nAmount = (amount * multiplier * nContent) / 100;
-    const pAmount = (amount * multiplier * (input.pContent || 0)) / 100;
-    const kAmount = (amount * multiplier * (input.kContent || 0)) / 100;
-    const sAmount = (amount * multiplier * (input.sContent || 0)) / 100;
+    const nAmount = (amountKg * nContent) / 100;
+    const pAmount = (amountKg * (input.pContent || 0)) / 100;
+    const kAmount = (amountKg * (input.kContent || 0)) / 100;
+    const sAmount = (amountKg * (input.sContent || 0)) / 100;
     
     totalInputs.N += nAmount;
     totalInputs.P += pAmount;

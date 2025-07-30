@@ -144,7 +144,7 @@ export const DEFAULT_FORM_VALUES = {
     { 
       source: 'fertiliser_N', 
       label: 'Nitrogen Fertiliser', 
-      amount: 8500,
+      amount: 8.5,  // Changed from kg to tonnes
       fertilizerType: 'ammonium_nitrate',
       availabilityN: 1.0,
       nContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.n,

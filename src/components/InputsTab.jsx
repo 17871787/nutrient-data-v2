@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { InputRow } from './SimpleEntry/InputRow';
 import { FERT_DEFAULT_N } from '../constants/fertiliserDefaults';
+import { tToKg } from '../utils/units';
 
 export function FertilizerInput({ 
   index, 
@@ -15,8 +16,11 @@ export function FertilizerInput({
 }) {
   const farmInfo = watch('farmInfo') || {};
   const totalArea = farmInfo.totalArea || 0;
-  const fertNkg = watch(`inputs.${index}.amount`) || 0;
-  const kgNha = totalArea > 0 ? fertNkg / totalArea : 0;
+  const fertTperYr = watch(`inputs.${index}.amount`) || 0;
+  const fertKgPerYr = tToKg(fertTperYr);
+  const nPercent = watch(`inputs.${index}.nContent`) || 0;
+  const kgN = fertKgPerYr * (nPercent / 100);
+  const kgNha = totalArea > 0 ? kgN / totalArea : 0;
   
   // Sync pre-seed fertilizer N% on mount
   useEffect(() => {
@@ -72,10 +76,12 @@ export function FertilizerInput({
       <div>
         <InputRow
           label="Amount"
-          unit="kg/yr"
+          unit="t/yr"
           register={register}
           field={`inputs.${index}.amount`}
           errors={errors}
+          step="0.1"
+          helpText="Tonnes per year (fresh weight)"
         />
         
         {/* Display N application rate per hectare */}
