@@ -9,7 +9,7 @@ export const tenantSkins: TenantSkin[] = [
   {
     slug: 'sainsburys',
     css:  '/themes/sainsburys.css',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Sainsbury%27s.svg',
+    logo: '/logo.svg',
     companyName: "Sainsbury's",
   },
 ];
