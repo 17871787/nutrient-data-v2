@@ -10,6 +10,7 @@ import {
 import { parseDecimal, safeParseFloat } from '../utils/inputHelpers';
 import { enableEightPxGrid } from '../config/designFlags';
 import { FORAGE_K_DEFAULTS } from '../constants/forageDefaults';
+import { freshToDryT, proteinTonnes, cpPercentDM } from '../utils/forageMath';
 
 // Helper to handle CP changes and calculate N%
 const handleCPChange = (e, index, setValue) => {
@@ -234,6 +235,13 @@ export function ForageInput({
   const milkOutput = watch('outputs')?.find(o => o.type === 'milk');
   const milkL = milkOutput?.amount || 0;
   const foragePerL = perLFromAnnual(forageT, milkL);
+  
+  // Calculate derived values for display
+  const dmPct = watch(`inputs.${index}.dmContent`) || 30;
+  const cpFresh = watch(`inputs.${index}.cpContent`) || 0;
+  const dryT = freshToDryT(forageT, dmPct);
+  const proteinT = proteinTonnes(forageT, cpFresh);
+  const cpDM = cpPercentDM(dmPct, cpFresh);
 
   // Helper to handle forage CP changes with DM% consideration
   const handleForageCPChange = (e) => {
@@ -311,6 +319,11 @@ export function ForageInput({
         <p className="text-xs text-gray-500 mt-1 ml-40">
           ≈ {foragePerCowDay.toFixed(2)} kg cow⁻¹ day⁻¹ • {foragePerL.toFixed(2)} kg L⁻¹ • {forageT.toFixed(0)} t/yr
         </p>
+      </div>
+      
+      {/* Display derived calculations */}
+      <div className="text-xs text-gray-600 mt-2 ml-40">
+        ≈ {dryT.toFixed(1)} t DM • {proteinT.toFixed(1)} t CP ({cpDM.toFixed(1)}% DM)
       </div>
       
       {/* DM% input */}
