@@ -9,6 +9,7 @@ import {
 } from '../utils/convert';
 import { parseDecimal, safeParseFloat } from '../utils/inputHelpers';
 import { enableEightPxGrid } from '../config/designFlags';
+import { FORAGE_K_DEFAULTS } from '../constants/forageDefaults';
 
 // Helper to handle CP changes and calculate N%
 const handleCPChange = (e, index, setValue) => {
@@ -280,6 +281,10 @@ export function ForageInput({
               // Calculate N based on CP DM basis
               const cpDM = cpFresh / (dmPct / 100);
               setValue(`inputs.${index}.nContent`, cpDM / 6.25);
+              
+              // Set K% based on forage type (using new defaults)
+              const kDefault = FORAGE_K_DEFAULTS[forageType] ?? 0.35; // Legacy default
+              setValue(`inputs.${index}.kContent`, kDefault);
             }
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -365,6 +370,7 @@ export function ForageInput({
           field={`inputs.${index}.kContent`}
           errors={errors}
           step="0.01"
+          helpText="Auto-fills based on forage type"
         />
       </div>
     </div>

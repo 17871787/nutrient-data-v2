@@ -98,7 +98,7 @@ export const simpleEntrySchema = z.object({
 // Default values for common feeds and fertilizers
 export const DEFAULT_NUTRIENT_CONTENTS = {
   concentrate: { cp: 15.84, n: 2.88, p: 0.5, k: 0.5, s: 0.2 }, // CP as fed (18% DM * 0.88)
-  silage: { cp: 14.0, n: 2.24, p: 0.06, k: 0.35, s: 0.03 },
+  silage: { cp: 14.0, n: 2.24, p: 0.06, k: 2.25, s: 0.03 }, // Updated K% for grass silage
   hay: { cp: 11.0, n: 1.76, p: 0.25, k: 2.0, s: 0.15 },
   straw: { cp: 3.5, n: 0.56, p: 0.08, k: 1.2, s: 0.08 },
   fertiliser_N: { cp: 0, n: 34.5, p: 0, k: 0, s: 0 }, // Default to ammonium nitrate N%
