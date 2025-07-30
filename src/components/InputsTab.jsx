@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { InputRow } from './SimpleEntry/InputRow';
+import { FERT_DEFAULT_N } from '../constants/fertiliserDefaults';
 
 export function FertilizerInput({ 
   index, 
@@ -16,6 +17,20 @@ export function FertilizerInput({
   const totalArea = farmInfo.totalArea || 0;
   const fertNkg = watch(`inputs.${index}.amount`) || 0;
   const kgNha = totalArea > 0 ? fertNkg / totalArea : 0;
+  
+  // Sync pre-seed fertilizer N% on mount
+  useEffect(() => {
+    const fertType = field.fertilizerType || watch(`inputs.${index}.fertilizerType`);
+    const currentN = watch(`inputs.${index}.nContent`);
+    
+    // If we have a type but N% doesn't match the expected default, sync it
+    if (fertType && FERT_DEFAULT_N[fertType] !== undefined) {
+      const expectedN = FERT_DEFAULT_N[fertType];
+      if (currentN !== expectedN) {
+        setValue(`inputs.${index}.nContent`, expectedN);
+      }
+    }
+  }, []); // Run once on mount
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">

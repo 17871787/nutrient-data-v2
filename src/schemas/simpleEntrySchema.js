@@ -101,7 +101,7 @@ export const DEFAULT_NUTRIENT_CONTENTS = {
   silage: { cp: 14.0, n: 2.24, p: 0.06, k: 0.35, s: 0.03 },
   hay: { cp: 11.0, n: 1.76, p: 0.25, k: 2.0, s: 0.15 },
   straw: { cp: 3.5, n: 0.56, p: 0.08, k: 1.2, s: 0.08 },
-  fertiliser_N: { cp: 0, n: 27.0, p: 0, k: 0, s: 0 },
+  fertiliser_N: { cp: 0, n: 34.5, p: 0, k: 0, s: 0 }, // Default to ammonium nitrate N%
   fertiliser_P: { cp: 0, n: 0, p: 20.0, k: 0, s: 0 },
   fertiliser_compound: { cp: 0, n: 20.0, p: 10.0, k: 10.0, s: 2.0 },
 };
