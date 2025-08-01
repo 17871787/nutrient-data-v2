@@ -153,19 +153,29 @@ export function calculateSimpleBalance(formData) {
   const nvzCompliant = organicNPerHa <= 170;
   
   // Calculate crop-side NUE (forage N harvested / field N applied)
-  const cropSideNUERaw = fieldNInputs > 0 ? (forageNHarvested / fieldNInputs) * 100 : 0;
-  // Cap at 100% to prevent display of unrealistic values during debugging
-  const cropSideNUE = Math.min(cropSideNUERaw, 100);
+  const cropSideNUE = fieldNInputs > 0 ? (forageNHarvested / fieldNInputs) * 100 : 0;
   
   // Debug logging
   if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
     console.log('=== Crop-side NUE Debug ===');
     console.log('Field N inputs (kg):', fieldNInputs.toFixed(2));
     console.log('Forage N harvested (kg):', forageNHarvested.toFixed(2));
-    console.log('Crop-side NUE raw (%):', cropSideNUERaw.toFixed(1));
-    console.log('Crop-side NUE capped (%):', cropSideNUE.toFixed(1));
+    console.log('Crop-side NUE (%):', cropSideNUE.toFixed(1));
     console.log('Slurry N applied (kg):', manureAppliedN.toFixed(2));
     console.log('Slurry N imported (kg):', manureImportedN.toFixed(2));
+    
+    // Check if they're equal (indicating missing inputs)
+    if (Math.abs(fieldNInputs - forageNHarvested) < 1) {
+      console.warn('⚠️ Field N = Forage N - check for missing N sources (imported manure, atmospheric deposition, etc.)');
+    }
+    
+    // Table view for easy comparison
+    console.table({
+      'Field N inputs (kg)': fieldNInputs,
+      'Forage N harvested (kg)': forageNHarvested,
+      'Difference (kg)': fieldNInputs - forageNHarvested,
+      'Crop-side NUE (%)': cropSideNUE
+    });
   }
   
   // Calculate farm gate balance
