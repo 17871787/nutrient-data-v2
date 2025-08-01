@@ -52,6 +52,18 @@ export function calculateSimpleBalance(formData) {
       fieldNInputs += nAmount;
     } else if (input.source === 'silage' || input.source === 'hay' || input.source === 'straw') {
       forageNHarvested += nAmount;
+      
+      // Debug logging for forage calculations
+      if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
+        console.log(`Forage input: ${input.label}`, {
+          amount_t: amount,
+          amount_kg: amountKg,
+          nContent_pct: nContent,
+          nAmount_kg: nAmount,
+          cpContent: input.cpContent,
+          dmContent: input.dmContent
+        });
+      }
     }
     
     // Calculate effective N based on availability
@@ -141,7 +153,20 @@ export function calculateSimpleBalance(formData) {
   const nvzCompliant = organicNPerHa <= 170;
   
   // Calculate crop-side NUE (forage N harvested / field N applied)
-  const cropSideNUE = fieldNInputs > 0 ? (forageNHarvested / fieldNInputs) * 100 : 0;
+  const cropSideNUERaw = fieldNInputs > 0 ? (forageNHarvested / fieldNInputs) * 100 : 0;
+  // Cap at 100% to prevent display of unrealistic values during debugging
+  const cropSideNUE = Math.min(cropSideNUERaw, 100);
+  
+  // Debug logging
+  if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
+    console.log('=== Crop-side NUE Debug ===');
+    console.log('Field N inputs (kg):', fieldNInputs.toFixed(2));
+    console.log('Forage N harvested (kg):', forageNHarvested.toFixed(2));
+    console.log('Crop-side NUE raw (%):', cropSideNUERaw.toFixed(1));
+    console.log('Crop-side NUE capped (%):', cropSideNUE.toFixed(1));
+    console.log('Slurry N applied (kg):', manureAppliedN.toFixed(2));
+    console.log('Slurry N imported (kg):', manureImportedN.toFixed(2));
+  }
   
   // Calculate farm gate balance
   const balance = {
