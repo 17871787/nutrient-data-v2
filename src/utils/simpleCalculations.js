@@ -154,8 +154,8 @@ export function calculateSimpleBalance(formData) {
   const manureN = manureAppliedN + manureImportedN - manureExportedN;
   const manureP = manureAppliedP + manureImportedP - manureExportedP;
   
-  // Add slurry/manure to field N inputs
-  fieldNInputs += manureAppliedN + manureImportedN;
+  // Add only imported slurry to field N inputs (home-produced slurry is recycled N)
+  fieldNInputs += manureImportedN;
   
   // Calculate organic N per hectare for NVZ compliance
   const totalArea = farmInfo.totalArea || 1; // Avoid division by zero
@@ -169,10 +169,11 @@ export function calculateSimpleBalance(formData) {
   if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
     console.log('=== Crop-side NUE Debug ===');
     console.log('Field N inputs (kg):', fieldNInputs.toFixed(2));
+    console.log('  - Fertilizer N:', (fieldNInputs - manureImportedN).toFixed(2));
+    console.log('  - Imported slurry N:', manureImportedN.toFixed(2));
     console.log('Forage N harvested (kg):', forageNHarvested.toFixed(2));
     console.log('Crop-side NUE (%):', cropSideNUE.toFixed(1));
-    console.log('Slurry N applied (kg):', manureAppliedN.toFixed(2));
-    console.log('Slurry N imported (kg):', manureImportedN.toFixed(2));
+    console.log('Home-produced slurry N applied (not counted):', manureAppliedN.toFixed(2));
     
     // Check if they're equal (indicating missing inputs)
     if (Math.abs(fieldNInputs - forageNHarvested) < 1) {
