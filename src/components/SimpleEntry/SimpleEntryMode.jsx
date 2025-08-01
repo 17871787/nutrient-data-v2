@@ -101,6 +101,13 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
 
     const isValid = await trigger(stepFields[currentStep]);
     
+    // Debug logging
+    if (!isValid) {
+      console.log('Validation failed for step', currentStep);
+      console.log('Errors:', errors);
+      console.log('Current values:', getValues());
+    }
+    
     if (isValid && currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     }

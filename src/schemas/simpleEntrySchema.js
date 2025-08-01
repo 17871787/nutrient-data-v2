@@ -169,6 +169,7 @@ export const DEFAULT_FORM_VALUES = {
     { 
       type: 'livestock', 
       label: 'Cull Cows', 
+      amount: 0,               // Legacy field, use number and avgWeightKg instead
       number: 36,              // 36 cull cows/year (20% culling rate)
       avgWeightKg: 650,        // 650 kg average live-weight
       nContent: 2.5,           // 2.5% N in carcass
