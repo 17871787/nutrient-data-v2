@@ -112,58 +112,74 @@ export const DEFAULT_NUTRIENT_CONTENTS = {
 export const DEFAULT_FORM_VALUES = {
   farmInfo: {
     name: 'Demo Farm',
-    totalArea: 120,
-    milkingCows: 180,
-    youngstock0_12: 45,
-    youngstock12_calving: 60,
-    milkCPpct: 3.2,
+    totalArea: 120,          // 120 hectares
+    milkingCows: 180,        // 180 milking cows
+    youngstock0_12: 45,      // 45 calves
+    youngstock12_calving: 60, // 60 heifers
+    milkCPpct: 3.2,          // Average milk CP%
   },
   inputs: [
     { 
       source: 'concentrate', 
       label: 'Dairy Concentrates', 
-      amount: 350,
-      feedMode: 'perL',
-      feedRate: 0.243,
-      dmPct: 88,
-      cpContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.cp,
-      nContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.n,
-      pContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.p,
-      kContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.k,
-      sContent: DEFAULT_NUTRIENT_CONTENTS.concentrate.s
+      amount: 350,             // 350 tonnes/year
+      feedMode: 'annual',      // Use annual mode for clearer display
+      perCowDay: 5.32,         // ~5.3 kg/cow/day
+      perL: 0.243,             // 0.243 kg/L milk
+      cpContent: 18,           // 18% CP on DM basis
+      nContent: 2.88,          // N% = CP/6.25
+      pContent: 0.5,
+      kContent: 0.5,
+      sContent: 0.2
     },
     { 
       source: 'silage', 
-      label: 'Forage', 
-      amount: 2800, 
-      cpContent: DEFAULT_NUTRIENT_CONTENTS.silage.cp,
-      nContent: DEFAULT_NUTRIENT_CONTENTS.silage.n,
-      pContent: DEFAULT_NUTRIENT_CONTENTS.silage.p,
-      kContent: DEFAULT_NUTRIENT_CONTENTS.silage.k,
-      sContent: DEFAULT_NUTRIENT_CONTENTS.silage.s,
-      dmContent: 30  // Add default DM% for grass silage
+      label: 'Forage',
+      forageType: 'grass_silage', 
+      amount: 2800,            // 2800 tonnes fresh weight/year
+      cpContent: 14,           // 14% CP on DM basis (typical grass silage)
+      nContent: 2.24,          // N% on DM basis
+      pContent: 0.06,
+      kContent: 2.25,          // Updated K% for grass silage
+      sContent: 0.03,
+      dmContent: 30            // 30% DM typical for grass silage
     },
     { 
       source: 'fertiliser_N', 
       label: 'Nitrogen Fertiliser', 
-      amount: 8.5,  // Changed from kg to tonnes
+      amount: 8.5,             // 8.5 tonnes/year (ammonium nitrate)
       fertilizerType: 'ammonium_nitrate',
-      availabilityN: 1.0,
-      nContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.n,
-      pContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.p,
-      kContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.k,
-      sContent: DEFAULT_NUTRIENT_CONTENTS.fertiliser_N.s
+      availabilityN: 1.0,      // 100% available
+      nContent: 34.5,          // 34.5% N
+      pContent: 0,
+      kContent: 0,
+      sContent: 0
     },
   ],
   outputs: [
-    { type: 'milk', label: 'Milk Sales', amount: 1440000, fatPct: 4.1, proteinPct: 3.3, nContent: 0.53, pContent: 0.09 }, // litres/year
-    { type: 'livestock', label: 'Cull Cows', amount: 12000, number: 20, avgWeightKg: 650, nContent: 2.5, pContent: 0.7 },
+    { 
+      type: 'milk', 
+      label: 'Milk Sales', 
+      amount: 1440000,         // 1.44 million litres/year (8000L/cow)
+      fatPct: 4.1,             // 4.1% butter fat
+      proteinPct: 3.3,         // 3.3% true protein
+      nContent: 0.53,          // Auto-calculated from protein
+      pContent: 0.09           // 0.09% P
+    },
+    { 
+      type: 'livestock', 
+      label: 'Cull Cows', 
+      number: 36,              // 36 cull cows/year (20% culling rate)
+      avgWeightKg: 650,        // 650 kg average live-weight
+      nContent: 2.5,           // 2.5% N in carcass
+      pContent: 0.7            // 0.7% P in carcass
+    },
   ],
   manure: {
-    slurryApplied: 4200,
-    slurryNContent: 2.5,
-    slurryPContent: 0.5,
-    slurryAvailabilityN: 0.45,
+    slurryApplied: 4200,       // 4200 m³/year
+    slurryNContent: 2.5,       // 2.5 kg N/m³
+    slurryPContent: 0.5,       // 0.5 kg P/m³
+    slurryAvailabilityN: 0.45, // 45% N availability
     slurryImported: 0,
     slurryImportedNContent: 2.5,
     slurryImportedPContent: 0.5,
