@@ -136,9 +136,9 @@ export const DEFAULT_FORM_VALUES = {
       source: 'silage', 
       label: 'Forage',
       forageType: 'grass_silage', 
-      amount: 2800,            // 2800 tonnes fresh weight/year
-      cpContent: 14,           // 14% CP on DM basis (typical grass silage)
-      nContent: 2.24,          // N% on DM basis
+      amount: 1800,            // 1800 tonnes fresh weight/year (more realistic)
+      cpContent: 12,           // 12% CP on DM basis (moderate quality silage)
+      nContent: 1.92,          // N% on DM basis (12/6.25)
       pContent: 0.06,
       kContent: 2.25,          // Updated K% for grass silage
       sContent: 0.03,
@@ -147,7 +147,7 @@ export const DEFAULT_FORM_VALUES = {
     { 
       source: 'fertiliser_N', 
       label: 'Nitrogen Fertiliser', 
-      amount: 8.5,             // 8.5 tonnes/year (ammonium nitrate)
+      amount: 35,              // 35 tonnes/year (ammonium nitrate) - realistic for 120ha dairy farm
       fertilizerType: 'ammonium_nitrate',
       availabilityN: 1.0,      // 100% available
       nContent: 34.5,          // 34.5% N
@@ -181,7 +181,7 @@ export const DEFAULT_FORM_VALUES = {
     slurryNContent: 2.5,       // 2.5 kg N/m³
     slurryPContent: 0.5,       // 0.5 kg P/m³
     slurryAvailabilityN: 0.45, // 45% N availability
-    slurryImported: 0,
+    slurryImported: 800,       // 800 m³/year imported slurry
     slurryImportedNContent: 2.5,
     slurryImportedPContent: 0.5,
     slurryExported: 0,
