@@ -10,7 +10,7 @@ import {
 import { parseDecimal, safeParseFloat } from '../utils/inputHelpers';
 import { enableEightPxGrid } from '../config/designFlags';
 import { FORAGE_K_DEFAULTS } from '../constants/forageDefaults';
-import { freshToDryT, proteinTonnes, cpPercentDM } from '../utils/forageMath';
+import { freshToDryT, proteinTonnes } from '../utils/forageMath';
 
 // Helper to handle CP changes and calculate N%
 const handleCPChange = (e, index, setValue) => {
@@ -180,7 +180,7 @@ export function ConcentrateInput({
       {/* Nutrient content inputs */}
       <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3 g-mt-3' : 'gap-3 mt-3'}`}>
         <InputRow
-          label="CP % (fresh weight)"
+          label="CP % (dry matter)"
           unit="%"
           register={register}
           field={`inputs.${index}.cpContent`}
@@ -238,20 +238,18 @@ export function ForageInput({
   
   // Calculate derived values for display
   const dmPct = watch(`inputs.${index}.dmContent`) || 30;
-  const cpFresh = watch(`inputs.${index}.cpContent`) || 0;
+  const cpDmPct = watch(`inputs.${index}.cpContent`) || 0;  // CP% on DM basis
   const dryT = freshToDryT(forageT, dmPct);
-  const proteinT = proteinTonnes(forageT, cpFresh);
-  const cpDM = cpPercentDM(dmPct, cpFresh);
+  const proteinT = proteinTonnes(forageT, dmPct, cpDmPct);
+  const cpDM = cpDmPct;  // Already on DM basis
 
-  // Helper to handle forage CP changes with DM% consideration
+  // Helper to handle forage CP changes (CP is on DM basis)
   const handleForageCPChange = (e) => {
     const cpValue = parseDecimal(e.target.value);
-    const cpFresh = safeParseFloat(cpValue);
-    setValue(`inputs.${index}.cpContent`, cpFresh);
-    // Recalculate N based on new CP and current DM%
-    const dmPct = watch(`inputs.${index}.dmContent`) || 30;
-    const cpDM = cpFresh / (dmPct / 100);
-    setValue(`inputs.${index}.nContent`, Math.round((cpDM / 6.25) * 100) / 100);
+    const cpDmPct = safeParseFloat(cpValue);
+    setValue(`inputs.${index}.cpContent`, cpDmPct);
+    // Calculate N based on CP% DM basis
+    setValue(`inputs.${index}.nContent`, Math.round((cpDmPct / 6.25) * 100) / 100);
   };
 
   return (
@@ -282,13 +280,12 @@ export function ForageInput({
             if (forageType && FORAGE_DEFAULTS[forageType]) {
               const defaults = FORAGE_DEFAULTS[forageType];
               const dmPct = defaults.dm || 30;
-              const cpFresh = defaults.cp;
+              const cpDmPct = defaults.cp;  // Assuming defaults are on DM basis
               
               setValue(`inputs.${index}.dmContent`, dmPct);
-              setValue(`inputs.${index}.cpContent`, cpFresh);
+              setValue(`inputs.${index}.cpContent`, cpDmPct);
               // Calculate N based on CP DM basis
-              const cpDM = cpFresh / (dmPct / 100);
-              setValue(`inputs.${index}.nContent`, cpDM / 6.25);
+              setValue(`inputs.${index}.nContent`, cpDmPct / 6.25);
               
               // Set K% based on forage type (using new defaults)
               const kDefault = FORAGE_K_DEFAULTS[forageType] ?? 0.35; // Legacy default
@@ -339,10 +336,7 @@ export function ForageInput({
           onChange={(e) => {
             const dmValue = parseFloat(e.target.value) || 30;
             setValue(`inputs.${index}.dmContent`, dmValue);
-            // Recalculate N based on CP fresh and new DM%
-            const cpFresh = watch(`inputs.${index}.cpContent`) || 0;
-            const cpDM = cpFresh / (dmValue / 100);
-            setValue(`inputs.${index}.nContent`, Math.round((cpDM / 6.25) * 100) / 100);
+            // N% doesn't change when DM% changes since CP is on DM basis
           }}
         />
       </div>
@@ -350,7 +344,7 @@ export function ForageInput({
       {/* Nutrient content inputs */}
       <div className={`grid grid-cols-2 ${enableEightPxGrid ? 'g-gap-3' : 'gap-3'}`}>
         <InputRow
-          label="CP % (fresh weight)"
+          label="CP % (dry matter)"
           unit="%"
           register={register}
           field={`inputs.${index}.cpContent`}

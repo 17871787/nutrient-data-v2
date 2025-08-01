@@ -2,11 +2,9 @@
 export const freshToDryT = (freshT, dmPct) =>
   freshT * (dmPct / 100);
 
-export const proteinTonnes = (freshT, cpFwPct) =>
-  freshT * (cpFwPct / 100);
-
-export const cpPercentDM = (dmPct, cpFwPct) =>
-  dmPct > 0 ? cpFwPct / (dmPct / 100) : 0;
+// Calculate protein tonnes from fresh tonnes, DM%, and CP% on DM basis
+export const proteinTonnes = (freshT, dmPct, cpDmPct) =>
+  freshT * (dmPct / 100) * (cpDmPct / 100);
 
 export const proteinToNkg = (proteinT) =>
   proteinT * 1000 * 0.16;   // 16% N in CP
