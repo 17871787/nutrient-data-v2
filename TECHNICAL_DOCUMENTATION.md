@@ -24,6 +24,10 @@ N_input = (amount × 1000 × N_content) / 100
 
 // If CP% is provided instead of N%:
 N_content = CP_content / 6.25
+
+// For forages with DM% and CP% on dry matter basis:
+Protein_tonnes = Fresh_tonnes × (DM% / 100) × (CP_DM% / 100)
+N_kg = Protein_tonnes × 1000 × 0.16
 ```
 
 #### Fertilizer Inputs
@@ -59,9 +63,10 @@ Milk_P = Milk_litres × 0.0009  // 0.9 g/L = 0.0009 kg/L
 
 #### Livestock Outputs
 ```javascript
-// Livestock (amount in kg liveweight):
-Livestock_N = (amount × N_content) / 100
-Livestock_P = (amount × P_content) / 100
+// Cull cows (number of animals × average live-weight):
+Carcass_weight_kg = Number_cows × Avg_liveweight_kg × 0.54  // 54% kill-out ratio
+Livestock_N = Carcass_weight_kg × 0.025  // 2.5% N in carcass
+Livestock_P = Carcass_weight_kg × 0.007  // 0.7% P in carcass
 ```
 
 ### 3. Manure Calculations
@@ -162,13 +167,15 @@ kg_nutrient = (tonnes_material × 1000 × nutrient_%) / 100
 | P Fertilizer | - | 0.00 | 20.00 | 0.00 | 0.00 |
 | Compound Fertilizer | - | 20.00 | 10.00 | 10.00 | 2.00 |
 
-### Forage CP% Defaults (DM basis)
-- Grass Silage: 14%
-- Grazed Grass: 22%
-- Whole-crop Cereal: 8%
-- Maize Silage: 8%
-- Hay: 11%
-- Straw: 3.5%
+### Forage Defaults
+| Forage Type | DM% | CP% (DM basis) | K% |
+|-------------|-----|----------------|----|
+| Grass Silage | 30 | 14 | 2.25 |
+| Grazed Grass | 20 | 22 | 3.0 |
+| Whole-crop Cereal | 40 | 8 | 1.0 |
+| Maize Silage | 33 | 8 | 1.0 |
+| Hay | 85 | 11 | 2.0 |
+| Straw | 88 | 3.5 | 1.2 |
 
 ### Fertilizer N Contents
 - Ammonium Nitrate: 34.5%
@@ -178,6 +185,8 @@ kg_nutrient = (tonnes_material × 1000 × nutrient_%) / 100
 - Composted FYM: 0.6%
 - Fresh FYM: 0.6%
 - Biosolids: 4.5%
+
+*Note: Fertilizer amounts are entered in tonnes/year in the interface*
 
 ### Slurry Defaults
 - N content: 2.5 kg/m³ (typical range: 2-3)
@@ -214,8 +223,10 @@ kg_nutrient = (tonnes_material × 1000 × nutrient_%) / 100
 
 ### Feed Calculations
 - CP to N conversion uses factor of 6.25 (assumes standard protein composition)
-- Feed nutrient contents are on as-fed basis unless specified
-- Forage nutrient contents can be adjusted based on analysis
+- Concentrate CP% values are on dry matter basis
+- Forage CP% values are on dry matter basis (industry standard)
+- Forage protein calculation: Fresh tonnes × DM% × CP% (DM basis)
+- Feed nutrient contents can be adjusted based on laboratory analysis
 
 ---
 
@@ -267,7 +278,11 @@ kg_nutrient = (tonnes_material × 1000 × nutrient_%) / 100
 
 ## Notes for Veterinary Professionals
 
-1. **Protein Analysis**: The system uses CP% (crude protein) rather than true protein. The 6.25 conversion factor assumes average N content in protein.
+1. **Protein Analysis**: 
+   - The system uses CP% (crude protein) rather than true protein
+   - The 6.25 conversion factor assumes average N content in protein
+   - All CP% values are expressed on a dry matter basis (industry standard)
+   - For forages: actual protein = fresh weight × DM% × CP% (DM basis)
 
 2. **Milk Composition**: The default milk P content (0.9 g/L) is an average value. Actual content varies with diet and stage of lactation.
 
@@ -287,5 +302,12 @@ kg_nutrient = (tonnes_material × 1000 × nutrient_%) / 100
 
 ---
 
-*Last updated: January 2025*
-*Version: 2.0*
+*Last updated: August 2025*
+*Version: 2.1*
+
+### Recent Updates (v2.1)
+- Clarified that all CP% values are on dry matter basis
+- Added forage DM% and proper protein calculation formula
+- Updated livestock calculations to use live-weight with kill-out ratio
+- Added forage K% defaults by type
+- Fertilizer amounts now in tonnes/year (converted from kg/year)
