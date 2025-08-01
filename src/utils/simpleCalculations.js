@@ -21,6 +21,10 @@ export function calculateSimpleBalance(formData) {
     S: 0,
   };
   
+  // Track field N and forage N separately
+  let fieldNInputs = 0;  // Fertilizer + slurry N
+  let forageNHarvested = 0;  // Forage protein N
+  
   // Sum up feed and fertilizer inputs
   inputs.forEach(input => {
     const amount = input.amount || 0;
@@ -42,6 +46,13 @@ export function calculateSimpleBalance(formData) {
     totalInputs.P += pAmount;
     totalInputs.K += kAmount;
     totalInputs.S += sAmount;
+    
+    // Track field vs forage N
+    if (input.source?.includes('fertiliser')) {
+      fieldNInputs += nAmount;
+    } else if (input.source === 'silage' || input.source === 'hay' || input.source === 'straw') {
+      forageNHarvested += nAmount;
+    }
     
     // Calculate effective N based on availability
     const nAvailability = input.availabilityN !== undefined ? input.availabilityN : 1.0;
@@ -121,10 +132,16 @@ export function calculateSimpleBalance(formData) {
   const manureN = manureAppliedN + manureImportedN - manureExportedN;
   const manureP = manureAppliedP + manureImportedP - manureExportedP;
   
+  // Add slurry/manure to field N inputs
+  fieldNInputs += manureAppliedN + manureImportedN;
+  
   // Calculate organic N per hectare for NVZ compliance
   const totalArea = farmInfo.totalArea || 1; // Avoid division by zero
   const organicNPerHa = manureN / totalArea;
   const nvzCompliant = organicNPerHa <= 170;
+  
+  // Calculate crop-side NUE (forage N harvested / field N applied)
+  const cropSideNUE = fieldNInputs > 0 ? (forageNHarvested / fieldNInputs) * 100 : 0;
   
   // Calculate farm gate balance
   const balance = {
@@ -162,6 +179,9 @@ export function calculateSimpleBalance(formData) {
     pEfficiency,
     estimatedLosses: { N: estimatedNLosses, P: estimatedPLosses },
     estimatedManureProduction: { N: estimatedManureN, P: estimatedManureP },
+    fieldNInputs,
+    forageNHarvested,
+    cropSideNUE,
   };
 }
 

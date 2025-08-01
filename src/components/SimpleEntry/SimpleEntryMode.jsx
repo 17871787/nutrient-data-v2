@@ -58,6 +58,7 @@ const FERTILIZER_TYPES = {
 
 export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [nueInputSource, setNueInputSource] = useState('field'); // Toggle for whole-farm NUE input
   
   const {
     register,
@@ -712,22 +713,93 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
             {/* Farm Efficiency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-primary-light rounded-lg p-4">
-                <h4 className="font-medium text-gray-700 mb-2">Nitrogen Use Efficiency (NUE)</h4>
-                <div className="space-y-2">
+                <h4 className="font-medium text-gray-700 mb-2">Nitrogen Use Efficiency</h4>
+                <div className="space-y-3">
+                  {/* Crop-side NUE */}
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span>N Efficiency</span>
-                      <span className="font-bold">{nutrientBalance.nEfficiency.toFixed(1)}%</span>
+                      <span className="flex items-center gap-1">
+                        Crop-side NUE
+                        <Info className="w-3 h-3 text-gray-400 cursor-help"
+                              title="Efficiency of converting field-applied N into forage N"
+                              aria-label="Efficiency of converting field-applied N into forage N"/>
+                      </span>
+                      <span className="font-bold">
+                        {nutrientBalance.fieldNInputs > 0 
+                          ? nutrientBalance.cropSideNUE.toFixed(1) 
+                          : 'n/a'}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all duration-500"
+                        style={{ width: `${Math.min(nutrientBalance.cropSideNUE || 0, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Forage N ÷ Field N × 100
+                    </p>
+                  </div>
+                  
+                  {/* Whole-farm NUE with toggle */}
+                  <div>
+                    <div className="flex justify-between items-center text-sm mb-1">
+                      <span className="flex items-center gap-1">
+                        Whole-farm NUE
+                        <Info className="w-3 h-3 text-gray-400 cursor-help"
+                              title="Efficiency of converting N inputs into product N (milk + meat)"
+                              aria-label="Efficiency of converting N inputs into product N (milk + meat)"/>
+                      </span>
+                      <span className="font-bold">
+                        {nueInputSource === 'field' 
+                          ? (nutrientBalance.fieldNInputs > 0 
+                              ? ((nutrientBalance.totalOutputs.N / nutrientBalance.fieldNInputs) * 100).toFixed(1)
+                              : 'n/a')
+                          : (nutrientBalance.forageNHarvested > 0
+                              ? ((nutrientBalance.totalOutputs.N / nutrientBalance.forageNHarvested) * 100).toFixed(1)
+                              : 'n/a')
+                        }%
+                      </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-primary transition-all duration-500"
-                        style={{ width: `${Math.min(nutrientBalance.nEfficiency, 100)}%` }}
+                        style={{ 
+                          width: `${Math.min(
+                            nueInputSource === 'field'
+                              ? (nutrientBalance.fieldNInputs > 0 ? (nutrientBalance.totalOutputs.N / nutrientBalance.fieldNInputs) * 100 : 0)
+                              : (nutrientBalance.forageNHarvested > 0 ? (nutrientBalance.totalOutputs.N / nutrientBalance.forageNHarvested) * 100 : 0),
+                            100
+                          )}%` 
+                        }}
                       />
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Based on effective N inputs
-                    </p>
+                    
+                    {/* Toggle buttons */}
+                    <div className="flex gap-1 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setNueInputSource('field')}
+                        className={`flex-1 px-2 py-1 text-xs rounded ${
+                          nueInputSource === 'field'
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Field-applied N
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNueInputSource('forage')}
+                        className={`flex-1 px-2 py-1 text-xs rounded ${
+                          nueInputSource === 'forage'
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Forage N
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -754,9 +826,17 @@ export default function SimpleEntryMode({ onSwitchToPro, onSaveData }) {
               </div>
             </div>
 
-            {/* GHG Indicator */}
+            {/* GHG Indicator - use whole-farm NUE based on selected input */}
             <GHGIndicator 
-              nue={nutrientBalance.nEfficiency} 
+              nue={
+                nueInputSource === 'field' 
+                  ? (nutrientBalance.fieldNInputs > 0 
+                      ? (nutrientBalance.totalOutputs.N / nutrientBalance.fieldNInputs) * 100
+                      : 0)
+                  : (nutrientBalance.forageNHarvested > 0
+                      ? (nutrientBalance.totalOutputs.N / nutrientBalance.forageNHarvested) * 100
+                      : 0)
+              } 
               system="mixed"
               showDetails={true}
             />
