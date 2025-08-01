@@ -37,7 +37,16 @@ export function calculateSimpleBalance(formData) {
       nContent = (input.cpContent || 0) / 6.25;
     }
     
-    const nAmount = (amountKg * nContent) / 100;
+    // For forages, N% is on DM basis, so adjust for fresh weight
+    let nAmount;
+    if ((input.source === 'silage' || input.source === 'hay' || input.source === 'straw') && input.dmContent) {
+      // N% is on DM basis, multiply by DM% to get fresh weight basis
+      const nFreshBasis = nContent * (input.dmContent / 100);
+      nAmount = (amountKg * nFreshBasis) / 100;
+    } else {
+      // For concentrates and fertilizers, N% is already on as-fed basis
+      nAmount = (amountKg * nContent) / 100;
+    }
     const pAmount = (amountKg * (input.pContent || 0)) / 100;
     const kAmount = (amountKg * (input.kContent || 0)) / 100;
     const sAmount = (amountKg * (input.sContent || 0)) / 100;
@@ -58,10 +67,11 @@ export function calculateSimpleBalance(formData) {
         console.log(`Forage input: ${input.label}`, {
           amount_t: amount,
           amount_kg: amountKg,
-          nContent_pct: nContent,
-          nAmount_kg: nAmount,
-          cpContent: input.cpContent,
-          dmContent: input.dmContent
+          dmContent: input.dmContent,
+          cpContent_DM: input.cpContent,
+          nContent_DM: nContent,
+          nContent_fresh: nContent * (input.dmContent / 100),
+          nAmount_kg: nAmount
         });
       }
     }
