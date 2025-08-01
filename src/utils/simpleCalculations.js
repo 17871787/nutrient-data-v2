@@ -167,7 +167,7 @@ export function calculateSimpleBalance(formData) {
   
   // Debug logging
   if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
-    console.log('=== Crop-side NUE Debug ===');
+    console.log('=== Crop-side NUE Debug (v2) ===');
     console.log('Field N inputs (kg):', fieldNInputs.toFixed(2));
     console.log('  - Fertilizer N:', (fieldNInputs - manureImportedN).toFixed(2));
     console.log('  - Imported slurry N:', manureImportedN.toFixed(2));
